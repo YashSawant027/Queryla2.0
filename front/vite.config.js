@@ -5,6 +5,6 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
     
-  ],base:process.env.VITE_BASE_PATH || "/Queryla2.0",
+  ],base: '/Queryla2.0/',
   
 })
