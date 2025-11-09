@@ -42,7 +42,7 @@ function Tools() {
               <img
                 src={db}
                 alt="database-logo"
-                className="w-[60px] sm:w-[80px] md:w-[100px] h-auto object-contain"
+                className="w-[60px] sm:w-20 md:w-[100px] h-auto object-contain"
               />
             </div>
           ))}
