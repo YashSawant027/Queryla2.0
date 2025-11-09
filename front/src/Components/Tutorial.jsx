@@ -6,13 +6,13 @@ import { Check } from "lucide-react";
 
 function Tutorial() {
     return (
-        <div className='mt-40 w-[1220px] mx-auto '>
+        <div className='mt-40 ax-w-[1120px] mx-auto '>
             <BeamGridBackground asBackground={false} showFade={true} gridSize={100}>
-                <div className='h-screen flex  justify-around items-center md:mb-0 mb-40'>
+                <div className='h-screen flex  justify-around items-center md:mb-0 mb-40 mx-5  mt-40'>
                     <div className='flex md:flex-row flex-col md:gap-5 backdrop-blur-md md:items-start items-center shadow-lg'>
-                        <img src={image1} alt="" className='md:w-[600px] w-[900px] h-auto' />
+                        <img src={image1} alt="" className='md:w-[700px] w-[900px] h-auto' />
                         <div className='md:mt-5 mt-2 p-7'>
-                            <h1 className='text-[35px] mb-3 font-bold'>Your personal SQL AI Assistant</h1>
+                            <h1 className='md:text-[35px] text-[20px] mb-3 font-bold'>Your personal SQL AI Assistant</h1>
                             <div className='flex gap-2'>
                                 <Check size={15} className='mt-1.5 font-bold'></Check>
                                 <p><b>Plan English questions.</b> allows you to ask question in plain english<br /> no coding required</p>
@@ -30,11 +30,11 @@ function Tutorial() {
 
                 </div>
 
-                <div className='h-screen flex justify-around items-start'>
+                <div className='h-screen flex justify-around items-start md:mb-0 mb-40 mx-10  mt-30'>
                     <div className='flex md:flex-row flex-col md:gap-5 backdrop-blur-md md:items-start items-center shadow-lg'>
                         
-                        <div className='mt-5 p-7'>
-                            <h1 className='text-[35px] mb-3 font-bold'>Add your database schema</h1>
+                        <div className='mt-5 p-7 order-2 md:order-1 h-auto'>
+                            <h1 className='md:text-[35px] text-[20px] mb-3 font-bold'>Add your database schema</h1>
                             <div className='flex gap-4'>
                                 <Check size={15} className='mt-1.5 font-bold'></Check>
                                 <p><b>Accurate Queries.</b> by including your database tables, <br /> columns, and relationship, our AI can craft precise SQL <br/>queries that perfectly match your data</p>
@@ -48,7 +48,7 @@ function Tutorial() {
                                 <p><b>Fast results.</b> Get an accurate response within seconds. <br />No need to wait for data analytics or waste hours on <br />complex queries</p>
                             </div>
                         </div>
-                        <img src={image2} alt="" className='md:w-[600px] w-[800px] h-auto' />
+                        <img src={image2} alt="" className='md:w-[700px] w-[900px] h-auto order-1 md:order-2"' />   
                     </div>
 
                 </div>

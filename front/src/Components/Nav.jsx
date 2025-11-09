@@ -6,7 +6,7 @@ function Nav() {
 
   return (
     <nav className="w-full bg-g shadow-sm fixed top-0 left-0 backdrop-blur-md z-50">
-      <div className="max-w-[1320px] mx-auto py-4 px-4 flex justify-between items-center h-[9vh]">
+      <div className="w-full max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center h-[9vh]">
         <h1 className="text-black font-bold text-[20px] md:text-[24px]">Queryla</h1>
 
         <ul className="hidden md:flex gap-6 text-[16px] text-gray-700 font-medium">
