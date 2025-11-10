@@ -5,7 +5,9 @@ import Nav from './Components/Nav'
 import Practicals from './Components/Practicals'
 import Tools from './Components/Tools'
 import Tutorial from './Components/Tutorial'
-import Reviews from './Components/Reviews'
+import Faqitems from './Components/Faqitems'
+import Footer from './Components/Footer'
+import Review from './Components/Review'
 
 
 function App() {
@@ -16,7 +18,9 @@ function App() {
       <Practicals/>
       <Tools/>
       <Tutorial/>
-      <Reviews />
+      <Faqitems />
+      <Review/>
+      <Footer/>
     </>
   )
 }
