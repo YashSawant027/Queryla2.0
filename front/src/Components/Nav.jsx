@@ -5,7 +5,7 @@ function Nav() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <nav className="w-full bg-g shadow-sm fixed top-0 left-0 backdrop-blur-md z-50">
+    <nav className="w-full  shadow-sm fixed top-0 left-0 backdrop-blur z-50">
       <div className="w-full max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center h-[9vh]">
         <h1 className="text-black font-bold text-[20px] md:text-[24px]">Queryla</h1>
 
@@ -18,7 +18,6 @@ function Nav() {
           Login
         </button>
 
-        {/* Mobile Menu Button */}
         <button
           className="md:hidden flex items-center text-black"
           onClick={() => setIsOpen(!isOpen)}
@@ -27,7 +26,6 @@ function Nav() {
         </button>
       </div>
 
-      {/* Mobile Dropdown Menu */}
       {isOpen && (
         <div className="md:hidden px-6 pb-4 flex flex-col gap-3 bg-white pt-4 border-t border-gray-200">
           <a

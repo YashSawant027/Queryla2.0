@@ -6,7 +6,7 @@ function FAQItem({ question, answer }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="border-b border-gray-300 py-4 transition-all duration-300 bg-white/80 backdrop-blur-sm rounded-xl px-4">
+    <div className="border-b border-gray-300 py-4 transition-all duration-100 bg-white/80 backdrop-blur-sm rounded-xl px-4">
       <button
         onClick={() => setOpen(!open)}
         className="flex justify-between items-center w-full text-left"
@@ -24,7 +24,7 @@ function FAQItem({ question, answer }) {
           open ? "max-h-40 opacity-100 mt-3" : "max-h-0 opacity-0"
         }`}
       >
-        <p className="text-gray-700 text-sm leading-relaxed">{answer}</p>
+        <p className="text-gray-700 text-sm">{answer}</p>
       </div>
     </div>
   );

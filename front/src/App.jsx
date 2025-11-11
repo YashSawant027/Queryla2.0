@@ -8,6 +8,7 @@ import Tutorial from './Components/Tutorial'
 import Faqitems from './Components/Faqitems'
 import Footer from './Components/Footer'
 import Review from './Components/Review'
+import Databaseconfig from './Components/Databaseconfig'
 
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
       <Faqitems />
       <Review/>
       <Footer/>
+      <Databaseconfig/>
     </>
   )
 }
