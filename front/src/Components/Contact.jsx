@@ -7,7 +7,7 @@ function Contact() {
         <Nav/>
     
     <div className='w-full h-auto'>
-    <div className='md:w-xl w-sm mx-auto  flex justify-center items-center h-screen'>
+    <div className='md:max-w-xl mx-auto  flex justify-center items-center h-screen'>
         
             <div className='shadow-xl w-full flex justify-center items-center p-6'>
            <div>
