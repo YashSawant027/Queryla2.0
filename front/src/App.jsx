@@ -9,6 +9,8 @@ import Faqitems from './Components/Faqitems'
 import Footer from './Components/Footer'
 import Review from './Components/Review'
 import Databaseconfig from './Components/Databaseconfig'
+import Login from './Components/Login'
+import Register from './Components/Register'
 
 
 function App() {
@@ -23,6 +25,8 @@ function App() {
       <Review/>
       <Footer/>
       <Databaseconfig/>
+      {/* <Login/>
+      <Register/> */}
     </>
   )
 }
