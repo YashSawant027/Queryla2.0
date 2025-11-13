@@ -11,6 +11,7 @@ import Review from './Components/Review'
 import Databaseconfig from './Components/Databaseconfig'
 import Login from './Components/Login'
 import Register from './Components/Register'
+import Contact from './Components/Contact'
 
 
 function App() {
@@ -27,6 +28,7 @@ function App() {
       <Databaseconfig/>
       {/* <Login/>
       <Register/> */}
+      <Contact/>
     </>
   )
 }
