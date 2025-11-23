@@ -20,13 +20,13 @@ function Register() {
 
                         <div>
                             <label className='block'>Email</label>
-                            <input type="email" id='name'  className='border-1 mt-2  border-gray-300 rounded-[7px] w-full h-[40px] px-2' placeholder='alex@gmail.com'/>
+                            <input type="email" id='email'  className='border-1 mt-2  border-gray-300 rounded-[7px] w-full h-[40px] px-2' placeholder='alex@gmail.com'/>
                         </div>
                     
                     
                         <div className='mt-3 mb-4'>
                             <label className='block'>Password  </label>
-                            <input type="password" id='name'  className='border-1 mt-2 border-gray-300 rounded-[7px] w-full h-[40px] px-2'/>
+                            <input type="password" id='password'  className='border-1 mt-2 border-gray-300 rounded-[7px] w-full h-[40px] px-2'/>
                         </div>
                     
                         <div className='flex justify-center items-center'>

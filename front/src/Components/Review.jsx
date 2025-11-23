@@ -22,8 +22,8 @@ function Review() {
           Discover what industry leaders and professionals say about{" "}
           <span className="font-semibold text-indigo-700">DataQuery AI</span>:
         </p>
-        <div class="md:mt-20 mt-5 grid md:grid-flow-col grid-rows-7 gap-4">
-          <div class="row-span-3 white shadow-xl p-5 rounded-[10px] flex justify-center items-center">
+        <div className="md:mt-20 mt-5 grid md:grid-flow-col grid-rows-7 gap-4">
+          <div className="row-span-3 white shadow-xl p-5 rounded-[10px] flex justify-center items-center">
             <div>
               <h2 className=" font-sans">"SQL is hard. Giving context to the AI of your schemas and what database you're working with has given me excellent results. Love to see this being automated by Queryla AI.”
             </h2>
@@ -40,7 +40,7 @@ function Review() {
             </div>
 
           </div>
-          <div class="row-span-2 bg-white shadow-xl p-5 rounded-[10px]">
+          <div className="row-span-2 bg-white shadow-xl p-5 rounded-[10px]">
             <h2>"En scrollant sur mon Instagram, je suis tombée sur Queryla AI: la plateforme AI qui permet de rédiger des requêtes SQL via le langage naturel.”
             </h2>
             <div className="flex gap-4 mt-3">
@@ -54,7 +54,7 @@ function Review() {
 
             </div>
           </div>
-          <div class="row-span-2 bg-white shadow-xl p-5 rounded-[10px]">
+          <div className="row-span-2 bg-white shadow-xl p-5 rounded-[10px]">
 
             <h2>"Why get scared of AI? In fact, leverage it. Queryla AI is the holy grail of 'all things data' — getting insights in seconds is amazing 🚀”
             </h2>
@@ -71,7 +71,7 @@ function Review() {
             </div>
 
           </div>
-          <div class="row-span-2 bg-white shadow-xl p-5 rounded-[10px]">
+          <div className="row-span-2 bg-white shadow-xl p-5 rounded-[10px]">
 
             <h2>"If you’re bored of typing SQL queries manually, you must try Queryla AI! It saves time and helps you focus on insights.",
             </h2>
@@ -88,7 +88,7 @@ function Review() {
             </div>
 
           </div>
-          <div class="row-span-2 bg-white shadow-xl p-5 rounded-[10px]">
+          <div className="row-span-2 bg-white shadow-xl p-5 rounded-[10px]">
 
           <h2>"Queryla AI is a powerful tool to generate SQL in minutes. I love how I don’t need to spend hours understanding and writing queries anymore 😄"
             </h2>
@@ -105,7 +105,7 @@ function Review() {
             </div>
 
           </div>
-          <div class="row-span-2 bg-white shadow-xl p-5 rounded-[10px]">
+          <div className="row-span-2 bg-white shadow-xl p-5 rounded-[10px]">
 
             <h2>"Transforming natural language questions into SQL queries has never been easier. Thanks to Queryla AI!"
             </h2>
@@ -122,7 +122,7 @@ function Review() {
             </div>
 
           </div>
-          <div class="row-span-2 bg-white shadow-xl p-5 rounded-[10px]">
+          <div className="row-span-2 bg-white shadow-xl p-5 rounded-[10px]">
 
           <h2>“Ready to level up your SQL skills? Text2SQL: Embrace AI to generate SQL queries ➡️ Queryla AI. Happy learning and exploring!”,
             </h2>
@@ -139,7 +139,7 @@ function Review() {
             </div>
 
           </div>
-          <div class="row-span-2 bg-white shadow-xl p-5 rounded-[10px]">
+          <div className="row-span-2 bg-white shadow-xl p-5 rounded-[10px]">
 
           <h2>“Je viens de découvrir un outil incroyable appelé Queryla qui utilise l'intelligence artificielle pour convertir des phrases en langage naturel en requêtes SQL”,
             </h2>
@@ -156,7 +156,7 @@ function Review() {
             </div>
 
           </div>
-          <div class="row-span-2 bg-white shadow-xl p-5 rounded-[10px]">
+          <div className="row-span-2 bg-white shadow-xl p-5 rounded-[10px]">
             <h2>“Gone are the days of struggling with complex SQL syntax! With Queryla, writing SQL queries has become a breeze”
             </h2>
             <div className="flex gap-4 mt-3">
