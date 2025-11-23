@@ -22,7 +22,7 @@ function App() {
     <>
       <BrowserRouter basename='/Queryla2.0'>
         <Routes>
-          <Route path='/Queryla2.0' element={<Practicals/>}/>
+          <Route path='/' element={<Practicals/>}/>
           <Route path='/login' element={<Login/>}/>
           <Route path='/register' element={<Register/>}/>
           <Route path='/contact' element={<Contact/>}/>

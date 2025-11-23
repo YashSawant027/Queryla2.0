@@ -11,7 +11,7 @@ function Nav() {
         <h1 className="text-black font-bold text-[20px] md:text-[24px]">Queryla</h1>
 
         <ul className="hidden md:flex gap-6 ml-[86px] text-[16px] text-gray-700 font-medium">
-          <li className="hover:text-black cursor-pointer"><Link to="/Queryla2.0/">Home</Link></li>
+          <li className="hover:text-black cursor-pointer"><Link to="/">Home</Link></li>
           <li className="hover:text-black cursor-pointer"><Link to="/contact">Contact</Link></li>
         </ul>
 
