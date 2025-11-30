@@ -37,7 +37,7 @@ function Nav() {
             <>
               <Link
                 to="/login"
-                className="hidden md:block cursor-pointer text-black text-[15px] rounded-[7px] px-4 py-2 hover:bg-gray-100 transition"
+                className="hidden md:block cursor-pointer border-1 text-black text-[15px] rounded-[7px] px-4 py-2 hover:bg-gray-100 transition"
               >
                 Login
               </Link>

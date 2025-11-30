@@ -3,6 +3,7 @@ import Nav from './Nav'
 import axios from 'axios'
 import {useNavigate} from 'react-router-dom'
 import  { AuthContext } from './Authprovider'
+import { Link } from 'react-router-dom'
 function Login() {
 
     const [username, setusername] = useState()
@@ -71,7 +72,7 @@ function Login() {
                             {loading ? (<button className='bg-black block mx-auto w-full text-white px-3 py-2 rounded-[5px] hover:bg-gray-900 cursor-pointer'>Please wait ...</button>) : (<button className='bg-black block mx-auto w-full text-white px-3 py-2 rounded-[5px] hover:bg-gray-900 cursor-pointer'>Login</button>)}
                             
                         </div>
-                        <p className='mt-3 text-center'>Don't have a account ? <a href="" className='text-blue-800'><u>Register</u></a></p>
+                        <p className='mt-3 text-center'>Don't have a account ? <a href="" className='text-blue-800'><u><Link to='/register'>Register</Link></u></a></p>
                 </form>
             </div>
         </div>
