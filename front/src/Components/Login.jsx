@@ -1,13 +1,15 @@
-import React, { useState } from 'react'
+import React, { useContext, useState } from 'react'
 import Nav from './Nav'
 import axios from 'axios'
 import {useNavigate} from 'react-router-dom'
+import  { AuthContext } from './Authprovider'
 function Login() {
 
     const [username, setusername] = useState()
     const [password, setpassword] = useState()
     const [error, seterror] = useState({})
     const [loading, setloading] = useState()
+    const {islogin, setislogin} = useContext(AuthContext)
 
     const navigate = useNavigate()
 
@@ -25,6 +27,7 @@ function Login() {
             localStorage.setItem('accessToken', response.data.access)
             localStorage.setItem('refreshToken', response.data.refresh)
             console.log("Login successfull")
+            setislogin(true)
             navigate('/')
             seterror({})
         }

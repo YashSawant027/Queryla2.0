@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import './App.css'
-import React from 'react' 
+import React from 'react'
 import Nav from './Components/Nav'
 import Practicals from './Components/Practicals'
 import Tools from './Components/Tools'
@@ -14,22 +14,25 @@ import Register from './Components/Register'
 import Contact from './Components/Contact'
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Home } from 'lucide-react'
+import AuthProvider from './Components/Authprovider'
 
 
 function App() {
 
   return (
     <>
-      <BrowserRouter basename='/Queryla2.0'>
-        <Routes>
-          <Route path='/' element={<Practicals/>}/>
-          <Route path='/login' element={<Login/>}/>
-          <Route path='/register' element={<Register/>}/>
-          <Route path='/contact' element={<Contact/>}/>
-        </Routes>
-      </BrowserRouter>
-      
-      
+      <AuthProvider>
+        <BrowserRouter basename='/Queryla2.0/'>
+        <Nav/>
+          <Routes>
+            <Route path='/' element={<Practicals />} />
+            <Route path='/login' element={<Login />} />
+            <Route path='/register' element={<Register />} />
+            <Route path='/contact' element={<Contact />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+
     </>
   )
 }

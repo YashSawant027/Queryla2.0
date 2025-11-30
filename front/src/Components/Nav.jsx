@@ -1,9 +1,19 @@
-import React, { useState } from "react";
-import {  Menu, X } from "lucide-react"; 
-import { Link } from "react-router-dom";
+import React, { useContext, useState } from "react";
+import { Menu, X } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { AuthContext } from "./Authprovider";
 
 function Nav() {
   const [isOpen, setIsOpen] = useState(false);
+  const { islogin, setislogin } = useContext(AuthContext);
+  const navigate = useNavigate();
+
+  const handlelogout = () => {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    setislogin(false);
+    navigate("/login");
+  };
 
   return (
     <nav className="w-full mx-auto border-b border-gray-300 fixed top-0 left-0 bg-white shadow-sm z-50">
@@ -16,13 +26,29 @@ function Nav() {
         </ul>
 
         <div className="flex gap-4">
-          <Link to="/login" className="hidden md:block cursor-pointer  text-black border-1 text-[15px] rounded-[7px] px-4 py-2 hover:bg-gray-100 transition">
-          Login
-        </Link>
-
-        <Link to="/register" className="hidden md:block cursor-pointer bg-black text-white text-[15px] rounded-[7px] px-4 py-2 hover:bg-gray-800 transition">
-          Register
-        </Link>
+          {islogin ? (
+            <button
+              className="hidden md:block cursor-pointer text-white text-[15px] rounded-[7px] px-4 py-2 hover:bg-gray-800 bg-black transition"
+              onClick={handlelogout}
+            >
+              Logout
+            </button>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="hidden md:block cursor-pointer text-black text-[15px] rounded-[7px] px-4 py-2 hover:bg-gray-100 transition"
+              >
+                Login
+              </Link>
+              <Link
+                to="/register"
+                className="hidden md:block cursor-pointer bg-black text-white text-[15px] rounded-[7px] px-4 py-2 hover:bg-gray-800 transition"
+              >
+                Register
+              </Link>
+            </>
+          )}
         </div>
 
         <button
@@ -35,24 +61,36 @@ function Nav() {
 
       {isOpen && (
         <div className="md:hidden px-6 pb-4 flex flex-col gap-3 bg-white pt-4 border-t border-gray-200">
-          <Link
-            to="/Queryla2.0"
-            className="text-gray-800 text-[14px] text-center hover:text-black transition"
-          >
+          <Link to="/" className="text-gray-800 text-[14px] text-center hover:text-black transition">
             Home
           </Link>
-          <Link
-            to="/contact"
-            className="text-gray-800 text-[14px] text-center hover:text-black transition"
-          >
+          <Link to="/contact" className="text-gray-800 text-[14px] text-center hover:text-black transition">
             Contact
           </Link>
-          <Link to="/login" className="bg-black text-white text-center cursor-pointer text-[15px] rounded-[7px] px-4 py-2 mt-2 hover:bg-gray-800 transition">
-            Login
-          </Link>
-          <Link to="/register" className="bg-black text-white text-center cursor-pointer text-[15px] rounded-[7px] px-4 py-2 mt-2 hover:bg-gray-800 transition">
-            Register
-          </Link>
+
+          {islogin ? (
+            <button
+              onClick={handlelogout}
+              className="bg-black text-white text-center cursor-pointer text-[15px] rounded-[7px] px-4 py-2 mt-2 hover:bg-gray-800 transition"
+            >
+              Logout
+            </button>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="bg-black text-white text-center cursor-pointer text-[15px] rounded-[7px] px-4 py-2 mt-2 hover:bg-gray-800 transition"
+              >
+                Login
+              </Link>
+              <Link
+                to="/register"
+                className="bg-black text-white text-center cursor-pointer text-[15px] rounded-[7px] px-4 py-2 mt-2 hover:bg-gray-800 transition"
+              >
+                Register
+              </Link>
+            </>
+          )}
         </div>
       )}
     </nav>
