@@ -27,9 +27,9 @@ function Practicals() {
       <div className='min-h-screen w-full m-auto flex justify-center items-center md:px-0 px-5'>
         <div>
           <img src={quality} alt="no1" className='w-[200px] text-center h-auto object-cover mx-auto mb-3'/>
-          <h1 className='font-bold md:text-[45px]  text-[27px] text-center'>Convert Text to SQL with <br/>AI in seconds</h1>
-        <p className='text-center text-[16px] mt-2'>Transform Natural Language into Powerful Database Queries. <br/>Our AI-powered tool converts your plain English instructions into precise SQL and NoSQL queries.</p>
-        <button className='text-[15px] px-4 mx-auto block py-3 bg-black mt-5 cursor-pointer hover:bg-gray-900 transition rounded-[7px] text-white'>Try now</button>
+          <h1 className='font-bold md:text-[45px]  text-[27px] text-center'>Welcome to Queryla <br/>Search smarter. Understand faster.</h1>
+        <p className='text-center md:text-[17px] text-[16px] mt-2'>Queryla helps you run powerful searches, filter information, and visualize results<br/> without any complicated setup or coding experience.</p>
+        <button className='text-[15px] px-4 mx-auto block py-3 bg-black mt-5 cursor-pointer hover:bg-gray-900 transition rounded-[7px] text-white'>Try Now</button>
         </div>
       </div>
       <Tools/>

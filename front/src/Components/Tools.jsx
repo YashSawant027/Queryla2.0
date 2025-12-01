@@ -23,8 +23,8 @@ function Tools() {
             for AI Query Generation
           </h2>
           <p className="text-[14px] sm:text-[16px] text-gray-600 mt-2">
-            Generate SQL for any database. Our LLM system understands <br className="hidden sm:block" />
-            the specific syntax and features of each database system.
+            Just describe what you need — our AI will generate the correct  <br className="hidden sm:block" />
+            query for your database automatically.
           </p>
         </div>
 

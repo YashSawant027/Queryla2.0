@@ -15,15 +15,15 @@ function Tutorial() {
                             <h1 className='md:text-[35px] text-[20px] mb-3 font-bold'>Your personal SQL AI Assistant</h1>
                             <div className='flex gap-2'>
                                 <Check size={15} className='mt-1.5 font-bold'></Check>
-                                <p><b>Plan English questions.</b> allows you to ask question in plain english<br /> no coding required</p>
+                                <p><b>Ask in plain English.</b> No need to write queries — just type your<br /> question, and our AI transforms it into accurate SQL instantly</p>
                             </div>
                             <div className='flex gap-2 mt-3'>
                                 <Check size={15} className='mt-1.5 font-bold'></Check>
-                                <p><b>All Purspose.</b> Answer questions for everything related to SQL</p>
+                                <p><b>All-purpose intelligence.</b> Get answers for anything related to your <br/>database — from simple lookups to complex analytics.</p>
                             </div>
                             <div className='flex gap-2 mt-3'>
                                 <Check size={15} className='mt-1.5 font-bold'></Check>
-                                <p><b>Fast results.</b> Get an accurate response within seconds. No need to<br /> wait for data analytics or waste hours on complex queries</p>
+                                <p><b>Fast results.</b> Receive precise SQL and insights within seconds.<br /> No more waiting for analysts or struggling with complex query logic.</p>
                             </div>
                         </div>
                     </div>
