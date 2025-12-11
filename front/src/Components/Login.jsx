@@ -72,7 +72,7 @@ function Login() {
                             {loading ? (<button className='bg-black block mx-auto w-full text-white px-3 py-2 rounded-[5px] hover:bg-gray-900 cursor-pointer'>Please wait ...</button>) : (<button className='bg-black block mx-auto w-full text-white px-3 py-2 rounded-[5px] hover:bg-gray-900 cursor-pointer'>Login</button>)}
                             
                         </div>
-                        <p className='mt-3 text-center'>Don't have a account ? <a href="" className='text-blue-800'><u><Link to='/register'>Register</Link></u></a></p>
+                        <p className='mt-3 text-center'>Don't have a account ? <u><Link to='/register' className='text-blue-800'>Register</Link></u></p>
                 </form>
             </div>
         </div>

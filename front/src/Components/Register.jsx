@@ -83,7 +83,7 @@ function Register() {
                                 {loading ? (<button className='bg-black block mx-auto w-full text-white px-3 py-2 rounded-[5px] hover:bg-gray-900 cursor-pointer'>Please wait ...</button>) : (<button className='bg-black block mx-auto w-full text-white px-3 py-2 rounded-[5px] hover:bg-gray-900 cursor-pointer'>Register</button>)}
                                 
                             </div>
-                            <p className='mt-3 text-center'>Already have a account ? <a href="" className='text-blue-800'><u><Link to='/login'>Login</Link></u></a></p>
+                            <p className='mt-3 text-center'>Already have a account ? <u><Link to='/login' className='text-blue-800'>Login</Link></u></p>
                         </form>
                     </div>
                 </div>

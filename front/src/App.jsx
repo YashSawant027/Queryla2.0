@@ -29,6 +29,7 @@ function App() {
             <Route path='/login' element={<Login />} />
             <Route path='/register' element={<Register />} />
             <Route path='/contact' element={<Contact />} />
+            <Route path='/database' element={<Databaseconfig/>}/>
           </Routes>
         </BrowserRouter>
       </AuthProvider>

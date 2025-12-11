@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import ParticlesBackground from './lightswind/particles-background';
 import quality from '../assets/no1.png'
 import Nav from './Nav';
@@ -8,8 +8,21 @@ import Faqitems from './Faqitems';
 import Review from './Review';
 import Databaseconfig from './Databaseconfig';
 import Footer from './Footer';
+import { AuthContext } from './Authprovider';
+import { Link, useNavigate } from 'react-router-dom';
 
 function Practicals() {
+  const {islogin, setislogin} = useContext(AuthContext)
+  const navigate = useNavigate()
+  const handleclick = (e) => {
+  const loginstate = islogin
+    if (loginstate){
+      navigate('/database')
+    }
+    else{
+      navigate('/login')
+    }
+  }
   return (
     <>
       <Nav />
@@ -29,14 +42,13 @@ function Practicals() {
           <img src={quality} alt="no1" className='w-[200px] text-center h-auto object-cover mx-auto mb-3'/>
           <h1 className='font-bold md:text-[45px]  text-[27px] text-center'>Welcome to Queryla <br/>Search smarter. Understand faster.</h1>
         <p className='text-center md:text-[17px] text-[16px] mt-2'>Queryla helps you run powerful searches, filter information, and visualize results<br/> without any complicated setup or coding experience.</p>
-        <button className='text-[15px] px-4 mx-auto block py-3 bg-black mt-5 cursor-pointer hover:bg-gray-900 transition rounded-[7px] text-white'>Try Now</button>
+        <button onClick={handleclick} className='text-[15px] px-4 mx-auto block py-3 bg-black mt-5 cursor-pointer hover:bg-gray-900 transition rounded-[7px] text-white' >Try Now</button>
         </div>
       </div>
       <Tools/>
       <Tutorial/>
       <Faqitems />
       <Review/>
-      <Databaseconfig/>
       <Footer/>
     </>
   )
