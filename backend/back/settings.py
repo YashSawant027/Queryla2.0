@@ -81,7 +81,7 @@ WSGI_APPLICATION = 'back.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'user_accounts',
+        'NAME': 'Queryla',
         'USER': 'postgres',
         'PASSWORD': 'yash',
         'HOST': 'localhost',
@@ -138,5 +138,5 @@ REST_FRAMEWORK = {
 }
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
+    "http://localhost:5174",
 ]
