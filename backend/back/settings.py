@@ -139,5 +139,5 @@ REST_FRAMEWORK = {
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5174",
-    "https://yashsawant027.github.io/Queryla2.0/",
+    "https://yashsawant027.github.io",
 ]
