@@ -12,7 +12,7 @@ import {
 import React, { useContext, useEffect, useRef, useState } from "react";
 import type { MotionValue } from "framer-motion";
 
-import { cn } from "../lib/utils";
+import { cn } from "../lib/utils.js";
 
 interface ThreeDScrollTriggerRowProps
   extends React.HTMLAttributes<HTMLDivElement> {
