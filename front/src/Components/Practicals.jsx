@@ -6,7 +6,6 @@ import Tools from './Tools';
 import Tutorial from './Tutorial';
 import Faqitems from './Faqitems';
 import Review from './Review';
-import Databaseconfig from './Databaseconfig';
 import Database from './Database';
 import Footer from './Footer';
 import { AuthContext } from './Authprovider';
