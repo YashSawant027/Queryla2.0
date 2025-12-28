@@ -7,6 +7,7 @@ import Tutorial from './Tutorial';
 import Faqitems from './Faqitems';
 import Review from './Review';
 import Databaseconfig from './Databaseconfig';
+import Database from './Database';
 import Footer from './Footer';
 import { AuthContext } from './Authprovider';
 import { Link, useNavigate } from 'react-router-dom';
@@ -17,7 +18,7 @@ function Practicals() {
   const handleclick = (e) => {
   const loginstate = islogin
     if (loginstate){
-      navigate('/database')
+      navigate('/data')
     }
     else{
       navigate('/login')

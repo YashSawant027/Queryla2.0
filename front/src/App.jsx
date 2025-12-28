@@ -9,6 +9,7 @@ import Faqitems from './Components/Faqitems'
 import Footer from './Components/Footer'
 import Review from './Components/Review'
 import Databaseconfig from './Components/Databaseconfig'
+import Database from './Components/Database'
 import Login from './Components/Login'
 import Register from './Components/Register'
 import Contact from './Components/Contact'
@@ -30,6 +31,7 @@ function App() {
             <Route path='/register' element={<Register />} />
             <Route path='/contact' element={<Contact />} />
             <Route path='/database' element={<Databaseconfig/>}/>
+            <Route path='/data' element={<Database/>}/>
           </Routes>
         </BrowserRouter>
       </AuthProvider>

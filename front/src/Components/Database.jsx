@@ -1,0 +1,598 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  Database, 
+  Send, 
+  Terminal, 
+  LineChart, 
+  PieChart as PieChartIcon, 
+  Table as TableIcon, 
+  Play, 
+  Cpu, 
+  CheckCircle2, 
+  AlertCircle,
+  RefreshCw,
+  Server,
+  Zap,
+  Sparkles,
+  Menu,
+  X,
+  ChevronDown, // Added for collapsible panel
+  ChevronUp    // Added for collapsible panel
+} from 'lucide-react';
+
+// --- HELPER COMPONENTS ---
+
+const SimpleLineChart = ({ data, labelKey, valueKey, color = "#8884d8" }) => {
+  if (!data || data.length === 0) return <div className="text-gray-400 p-4">No data to chart</div>;
+  
+  const values = data.map(d => Number(d[valueKey]) || 0);
+  const max = Math.max(...values);
+  const min = 0; 
+  const range = max - min || 1;
+
+  // Use percentages for X positioning to align SVG and HTML elements
+  const getX = (index) => {
+      if (data.length <= 1) return 50;
+      return (index / (data.length - 1)) * 100;
+  };
+  
+  // Y is inverted (100% is 0 value, 0% is max value)
+  const getY = (val) => {
+      const normalized = (val - min) / range;
+      return 100 - (normalized * 100); 
+  };
+
+  const points = data.map((d, i) => `${getX(i)},${getY(Number(d[valueKey]) || 0)}`).join(' ');
+
+  // Calculate unique tick values for Y-axis to avoid duplicates
+  let ticks = [0, 0.25, 0.5, 0.75, 1].map(pct => Math.round(min + (range * pct)));
+  ticks = [...new Set(ticks)].sort((a, b) => b - a);
+
+  return (
+    <div className="w-full h-64 sm:h-72 p-2 sm:p-4 border rounded bg-white flex flex-col font-sans">
+       <div className="flex flex-1 min-h-0 relative">
+           {/* Y Axis Labels */}
+           <div className="flex flex-col justify-between text-[8px] sm:text-[10px] text-[#666] pr-2 select-none h-full py-1">
+              {ticks.map((tick, i) => (
+                 <span key={i} className="leading-none text-right w-6 sm:w-8">{tick}</span>
+              ))}
+           </div>
+
+           {/* Chart Area */}
+           <div className="flex-1 relative">
+              <svg className="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 100 100">
+                {/* Horizontal Grid Lines */}
+                {ticks.map((tick) => {
+                   const yPos = getY(tick);
+                   return (
+                     <line key={tick} x1="0" y1={yPos} x2="100" y2={yPos} stroke="#ccc" strokeWidth="1" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />
+                   );
+                })}
+                
+                {/* Line */}
+                <polyline 
+                  points={points}
+                  fill="none"
+                  stroke={color}
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  vectorEffect="non-scaling-stroke"
+                />
+              </svg>
+
+              {/* Data Points */}
+              <div className="absolute inset-0 pointer-events-none">
+                 {data.map((d, i) => (
+                   <div 
+                     key={i}
+                     className="absolute bg-white border border-solid rounded-full transform -translate-x-1/2 -translate-y-1/2 shadow-sm pointer-events-auto cursor-pointer group"
+                     style={{ 
+                       left: `${getX(i)}%`, 
+                       top: `${getY(Number(d[valueKey]) || 0)}%`,
+                       borderColor: color,
+                       width: '6px',
+                       height: '6px',
+                       borderWidth: '1.5px'
+                     }}
+                   >
+                      <div className="opacity-0 group-hover:opacity-100 absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-white border border-gray-200 text-gray-600 text-[10px] px-2 py-1 rounded shadow-sm whitespace-nowrap z-20 pointer-events-none transition-opacity duration-200">
+                          <span className="font-bold text-[#8884d8]">{d[labelKey]}:</span> {d[valueKey]}
+                       </div>
+                   </div>
+                 ))}
+              </div>
+           </div>
+       </div>
+
+       {/* X Axis Labels */}
+       <div className="flex relative h-6 mt-2 ml-8 sm:ml-10 select-none">
+          {data.map((d, i) => (
+             <div 
+               key={i} 
+               className="absolute text-[8px] sm:text-[10px] text-[#666] transform -translate-x-1/2 text-center w-8 sm:w-12 truncate"
+               style={{ left: `${getX(i)}%` }}
+             >
+                {d[labelKey]}
+             </div>
+          ))}
+       </div>
+    </div>
+  );
+};
+
+const SimplePieChart = ({ data, labelKey, valueKey }) => {
+  if (!data || data.length === 0) return <div className="text-gray-400 p-4">No data to chart</div>;
+
+  const total = data.reduce((acc, curr) => acc + (Number(curr[valueKey]) || 0), 0);
+  let cumulativePercent = 0;
+
+  const getCoordinatesForPercent = (percent) => {
+    const x = Math.cos(2 * Math.PI * percent);
+    const y = Math.sin(2 * Math.PI * percent);
+    return [x, y];
+  };
+
+  const colors = ['#8884d8', '#83a6ed', '#8dd1e1', '#82ca9d', '#a4de6c', '#d0ed57', '#ffc658', '#8884d8'];
+
+  return (
+    <div className="w-full h-64 flex flex-col sm:flex-row items-center justify-center p-4 border rounded bg-white">
+      <div className="relative w-40 h-40 sm:w-48 sm:h-48 flex-shrink-0">
+        <svg viewBox="-1 -1 2 2" className="transform -rotate-90 w-full h-full">
+          {data.map((slice, i) => {
+            const value = Number(slice[valueKey]) || 0;
+            const percent = value / total;
+            const start = getCoordinatesForPercent(cumulativePercent);
+            cumulativePercent += percent;
+            const end = getCoordinatesForPercent(cumulativePercent);
+            const largeArcFlag = percent > 0.5 ? 1 : 0;
+            const pathData = [
+              `M 0 0`,
+              `L ${start[0]} ${start[1]}`,
+              `A 1 1 0 ${largeArcFlag} 1 ${end[0]} ${end[1]}`,
+              `Z`
+            ].join(' ');
+
+            return (
+              <path 
+                key={i} 
+                d={pathData} 
+                fill={colors[i % colors.length]} 
+                stroke="white" 
+                strokeWidth="0.02"
+                className="hover:opacity-80 transition-opacity cursor-pointer"
+              >
+                <title>{slice[labelKey]}: {value} ({Math.round(percent * 100)}%)</title>
+              </path>
+            );
+          })}
+        </svg>
+      </div>
+      <div className="mt-4 sm:mt-0 sm:ml-8 text-xs space-y-1 w-full sm:w-auto max-h-32 sm:max-h-48 overflow-y-auto">
+        {data.map((item, i) => (
+          <div key={i} className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: colors[i % colors.length] }}></div>
+            <span className="text-slate-600 font-medium truncate max-w-[120px]">{item[labelKey]}</span>
+            <span className="text-slate-400">({Math.round((Number(item[valueKey])/total)*100)}%)</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const DataTable = ({ data }) => {
+  if (!data || data.length === 0) return <div className="text-gray-500 italic">No results found.</div>;
+  const columns = Object.keys(data[0]);
+  return (
+    <div className="overflow-x-auto border rounded-lg">
+      <table className="w-full text-sm text-left text-gray-700 whitespace-nowrap">
+        <thead className="text-xs text-gray-700 uppercase bg-gray-100">
+          <tr>{columns.map(col => <th key={col} className="px-4 py-3">{col}</th>)}</tr>
+        </thead>
+        <tbody>
+          {data.map((row, idx) => (
+            <tr key={idx} className="bg-white border-b hover:bg-gray-50">
+              {columns.map(col => <td key={`${idx}-${col}`} className="px-4 py-3">{typeof row[col] === 'object' ? JSON.stringify(row[col]) : row[col]}</td>)}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+// --- CHART CONTAINER COMPONENT ---
+const ChartContainer = ({ data, config }) => {
+  const defaultType = config.type === 'bar' ? 'pie' : (config.type || 'pie');
+  const [chartType, setChartType] = useState(defaultType);
+  const activeType = (chartType === 'bar' || chartType === 'area') ? 'pie' : chartType; 
+
+  return (
+    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden animate-in slide-in-from-bottom-2 duration-500">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-slate-100 bg-slate-50/50">
+        <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
+          {activeType === 'line' ? <LineChart className="w-4 h-4 text-indigo-500"/> : 
+           activeType === 'pie' ? <PieChartIcon className="w-4 h-4 text-indigo-500"/> :
+           <TableIcon className="w-4 h-4 text-indigo-500"/>}
+          Visual Insight
+        </div>
+        <div className="flex gap-1 bg-slate-100 p-1 rounded-lg">
+          <button onClick={() => setChartType('line')} className={`p-1.5 rounded-md transition-all ${activeType === 'line' ? 'bg-white shadow text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`} title="Line Chart">
+            <LineChart className="w-3.5 h-3.5" />
+          </button>
+          <button onClick={() => setChartType('pie')} className={`p-1.5 rounded-md transition-all ${activeType === 'pie' ? 'bg-white shadow text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`} title="Pie Chart">
+            <PieChartIcon className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      <div className="p-4 border-b border-slate-100">
+        {activeType === 'line' && <SimpleLineChart data={data} labelKey={config.labelKey} valueKey={config.valueKey} color="#8884d8" />}
+        {activeType === 'pie' && <SimplePieChart data={data} labelKey={config.labelKey} valueKey={config.valueKey} />}
+      </div>
+
+      <div className="p-4 max-h-60 overflow-y-auto">
+        <h4 className="text-xs font-bold text-slate-500 uppercase mb-2">Source Data</h4>
+        <DataTable data={data} />
+      </div>
+    </div>
+  );
+};
+
+export default function SQLAssistant() {
+  const [connectionString, setConnectionString] = useState("");
+  const [isConnected, setIsConnected] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [dbTables, setDbTables] = useState([]);
+  const [input, setInput] = useState("");
+  const [isConnectionExpanded, setIsConnectionExpanded] = useState(true); // Default open
+  const [messages, setMessages] = useState([
+    { 
+      id: 1, 
+      type: 'bot', 
+      text: "Hello! I am ready to connect to your Database (Postgres, MySQL, MongoDB, Oracle). Enter your connection string above to begin." 
+    }
+  ]);
+  const messagesEndRef = useRef(null);
+
+  const demoConnectionStrings = [
+    { label: "PostgreSQL", value: "postgresql://postgres:[PASSWORD]@db.[PROJECT].supabase.co:5432/postgres" },
+    { label: "MySQL", value: "mysql://rfamro:4@mysql-rfam-public.ebi.ac.uk:4497/Rfam" },
+    { label: "MongoDB", value: "mongodb+srv://[USER]:[PASSWORD]@[CLUSTER].mongodb.net/test?retryWrites=true&w=majority" },
+    { label: "Oracle", value: "oracle://[USER]:[PASSWORD]@[HOST]:1522/[SERVICE_NAME]" },
+    { label: "SQL Server", value: "mssql://[USER]:[PASSWORD]@[SERVER].database.windows.net:1433/[DBNAME]" },
+  ];
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const generateId = () => Date.now() + Math.random();
+
+  const addBotMessage = (text, sql = null, data = null, chartConfig = null) => {
+    setMessages(prev => [...prev, { id: generateId(), type: 'bot', text, sql, data, chartConfig }]);
+  };
+
+  const addUserMessage = (text) => {
+    setMessages(prev => [...prev, { id: generateId(), type: 'user', text }]);
+  };
+
+  const handleConnect = async () => {
+    setIsConnecting(true);
+    try {
+      const response = await fetch('http://localhost:8000/connect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ connection_string: connectionString })
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.detail || "Failed to connect");
+      }
+
+      setIsConnected(true);
+      setDbTables(result.tables || []);
+      addBotMessage(result.message || "Connected successfully!");
+      // Automatically collapse on successful connect for better mobile UX
+      if (window.innerWidth < 768) {
+        setIsConnectionExpanded(false);
+      }
+      
+    } catch (error) {
+      console.error("Connection failed", error);
+      addBotMessage(`Error: ${error.message}. Make sure the backend is running and the string is correct.`);
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
+  const processQuery = async (query) => {
+    addBotMessage("Thinking...");
+    
+    try {
+      const response = await fetch('http://localhost:8000/query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: query })
+      });
+
+      const result = await response.json();
+      
+      setMessages(prev => prev.filter(m => !(m.type === 'bot' && m.text === "Thinking...")));
+
+      if (!response.ok) throw new Error(result.detail || "Query failed");
+
+      let finalChartConfig = result.chart_config;
+      
+      if (!finalChartConfig && result.data && result.data.length > 0) {
+        const firstRow = result.data[0];
+        const keys = Object.keys(firstRow);
+        const lowerQuery = query.toLowerCase();
+
+        const labelKey = keys.find(k => {
+            const val = firstRow[k];
+            if (typeof val === 'string' || val instanceof Date) return true;
+            if (typeof val === 'number' && val > 1900 && val < 2100 && k.toLowerCase().includes('year')) return true;
+            return false;
+        }) || keys[0];
+
+        const valueKey = keys.find(k => {
+            if (typeof firstRow[k] !== 'number') return false;
+            const keyLower = k.toLowerCase();
+            const isId = keyLower === 'id' || keyLower.endsWith('_id') || keyLower.endsWith('id') || keyLower === 'pk';
+            const isCode = keyLower.includes('code') || keyLower.includes('zip') || keyLower.includes('phone') || keyLower.includes('serial') || keyLower.includes('number') || keyLower.includes('no.');
+            if (isId || isCode) return false;
+            return true;
+        });
+
+        const explicitChartIntent = ['chart', 'graph', 'plot', 'visual', 'trend', 'diagram'].some(w => lowerQuery.includes(w));
+        const aggregateIntent = ['count', 'sum', 'avg', 'average', 'total', 'max', 'min', 'group by', 'compare', 'vs', 'breakdown', 'distribution'].some(w => lowerQuery.includes(w));
+        
+        let shouldChart = false;
+        
+        if (labelKey && valueKey) {
+            if (explicitChartIntent || aggregateIntent) {
+                shouldChart = true;
+            } else {
+                const metricKeywords = ['mark', 'score', 'grade', 'point', 'sales', 'revenue', 'profit', 'amount', 'qty', 'quantity', 'price', 'cost', 'salary'];
+                if (metricKeywords.some(w => valueKey.toLowerCase().includes(w))) {
+                    shouldChart = true;
+                }
+            }
+        }
+
+        if (shouldChart && labelKey && valueKey) {
+          const isDateLike = (val) => !isNaN(Date.parse(val)) && isNaN(val);
+          const lowerLabel = labelKey.toLowerCase();
+          const isTimeDimension = lowerLabel.includes('date') || lowerLabel.includes('time') || lowerLabel.includes('year') || isDateLike(firstRow[labelKey]);
+          
+          let type = 'pie';
+          if (isTimeDimension) type = 'line';
+
+          finalChartConfig = {
+            type: type,
+            labelKey,
+            valueKey,
+            color: '#8884d8'
+          };
+        }
+      }
+
+      addBotMessage(
+        result.answer || "Query processed successfully.",
+        result.sql_query,
+        result.data,
+        finalChartConfig
+      );
+
+    } catch (error) {
+       setMessages(prev => prev.filter(m => !(m.type === 'bot' && m.text === "Thinking...")));
+       addBotMessage(`Error: ${error.message}`);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!input.trim()) return;
+    if (!isConnected) {
+      addBotMessage("Please connect to your database first.");
+      // Open panel if trying to query without connection
+      setIsConnectionExpanded(true);
+      return;
+    }
+    addUserMessage(input);
+    const currentInput = input;
+    setInput("");
+    await processQuery(currentInput);
+  };
+
+  return (
+    <div className="flex flex-col md:flex-row h-[90vh] mt-18 w-full bg-slate-50 text-slate-900 font-sans overflow-hidden">
+      
+      {/* CONNECTION PANEL */}
+      <div className={`
+        w-full md:w-80 bg-white border-b md:border-b-0 md:border-r border-slate-200 flex flex-col shadow-sm z-20 flex-shrink-0 transition-all duration-300 ease-in-out
+        ${isConnectionExpanded ? 'h-[50vh] md:h-full' : 'h-14 md:h-full'}
+      `}>
+        <div 
+          className="p-4 md:p-5 border-b border-slate-100 flex items-center justify-between cursor-pointer md:cursor-default"
+          onClick={() => {
+            // Only toggle on mobile (when not md)
+            if (window.innerWidth < 768) {
+              setIsConnectionExpanded(!isConnectionExpanded);
+            }
+          }}
+        >
+          <div className="flex items-center gap-2 text-indigo-600 font-bold text-xl">
+            <h3 className="text-sm font-semibold text-slate-700  flex items-center gap-2">
+              <Server className="w-4 h-4" /> Connection
+            </h3>
+          </div>
+          
+          {/* Mobile Toggle Button */}
+          <button className="md:hidden text-slate-400 hover:text-indigo-600 transition-colors p-1">
+            {isConnectionExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+          </button>
+        </div>
+        
+        {/* Connection Content - Hidden when collapsed on mobile */}
+        <div className={`
+          flex-1 overflow-y-auto p-4 md:p-5
+          ${isConnectionExpanded ? 'block' : 'hidden md:block'}
+        `}>
+          <div className="mb-6">
+            
+            
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-medium text-slate-500 mb-1 block">Connection String</label>
+                <input 
+                  type="text" 
+                  value={connectionString}
+                  onChange={(e) => setConnectionString(e.target.value)}
+                  disabled={isConnected}
+                  placeholder="postgres://..., mysql://..., mongodb://..."
+                  className="w-full text-xs p-2 border border-slate-300 rounded bg-slate-50 font-mono text-slate-600 focus:ring-2 focus:ring-indigo-500 focus:outline-none break-all"
+                />
+                
+                {/* Demo Chips */}
+                <div className="mt-3">
+                  <p className="text-[10px] font-semibold text-slate-400 mb-2 uppercase">Quick Test Strings</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {demoConnectionStrings.map((demo) => (
+                      <button
+                        key={demo.label}
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault(); 
+                          setConnectionString(demo.value);
+                        }}
+                        disabled={isConnected}
+                        className="px-2 py-1 text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-600 rounded border border-slate-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        title={`Use ${demo.label} connection string`}
+                      >
+                        {demo.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <p className="text-[10px] text-slate-400 mt-2 leading-relaxed">
+                  Supports PostgreSQL, MySQL, MongoDB, Oracle
+                </p>
+              </div>
+
+              {!isConnected ? (
+                <button 
+                  onClick={handleConnect}
+                  disabled={isConnecting}
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-2 rounded font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  {isConnecting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+                  {isConnecting ? "Connect to DB" : "Connect"}
+                </button>
+              ) : (
+                <div className="flex items-center justify-between bg-green-50 text-green-700 p-2 rounded border border-green-200 text-sm">
+                  <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Connected</span>
+                  <button onClick={() => setIsConnected(false)} className="text-xs underline">Disconnect</button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {isConnected && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <h3 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+                <TableIcon className="w-4 h-4" /> Tables Found
+              </h3>
+              <div className="space-y-2">
+                {dbTables.length === 0 ? (
+                    <p className="text-xs text-slate-400 italic">No tables found.</p>
+                ) : (
+                    dbTables.map(table => (
+                        <div key={table} className="bg-slate-50 p-2 border border-slate-200 rounded text-xs font-mono text-slate-600 flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-indigo-400"></div>
+                            {table}
+                        </div>
+                    ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* MAIN CHAT AREA */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+          {messages.map((msg) => (
+            <div key={msg.id} className={`flex flex-col ${msg.type === 'user' ? 'items-end' : 'items-start'}`}>
+              
+              <div 
+                className={`max-w-[90%] sm:max-w-[80%] p-3 sm:p-4 rounded-2xl shadow-sm text-sm leading-relaxed ${
+                  msg.type === 'user' 
+                    ? 'bg-indigo-600 text-white rounded-br-none' 
+                    : 'bg-white border border-slate-200 text-slate-800 rounded-tl-none'
+                }`}
+              >
+                {msg.type === 'bot' && (
+                  <div className="flex items-center gap-2 mb-2 text-indigo-600 font-bold text-xs uppercase tracking-wider">
+                    <Cpu className="w-3 h-3" /> AI Assistant
+                  </div>
+                )}
+                {msg.text}
+              </div>
+
+              {msg.sql && (
+                <div className="mt-2 w-full max-w-[90%] sm:max-w-[80%] animate-in fade-in zoom-in-95 duration-300">
+                  <div className="bg-slate-900 rounded-lg overflow-hidden shadow-md">
+                    <div className="bg-slate-800 px-3 py-1.5 flex items-center justify-between border-b border-slate-700">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-slate-400 font-mono">Generated Query</span>
+                        <Zap className="w-3 h-3 text-yellow-500" />
+                      </div>
+                    </div>
+                    <div className="p-3 font-mono text-xs sm:text-sm text-green-400 overflow-x-auto whitespace-pre-wrap">
+                      {msg.sql}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {(msg.data || msg.chartConfig) && (
+                <div className="mt-4 w-full max-w-[100%] sm:max-w-[80%]">
+                  <ChartContainer data={msg.data} config={msg.chartConfig || {}} />
+                </div>
+              )}
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input Area */}
+        <div className="p-3 sm:p-4 bg-white border-t border-slate-200 flex-none">
+          <form onSubmit={handleSubmit} className="relative max-w-4xl mx-auto">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={isConnected ? "Query your database (e.g. 'Show total sales by region')..." : "Connect to start chatting..."}
+              disabled={!isConnected}
+              className="w-full pl-4 sm:pl-5 pr-12 py-3 sm:py-3.5 bg-slate-100 border-transparent focus:bg-white border focus:border-indigo-500 rounded-full shadow-sm text-sm focus:outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+            />
+            <button
+              type="submit"
+              disabled={!input.trim() || !isConnected}
+              className="absolute right-2 top-1.5 sm:top-2 p-1.5 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 disabled:opacity-50 disabled:hover:bg-indigo-600 transition-colors"
+            >
+              <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}

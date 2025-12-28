@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+pymysql
+mysql-connector-python
+oracledb
+pyodbc
+pymongo
+langchain
+langchain-community
+langchain-groq
+pydantic
+python-dotenv
