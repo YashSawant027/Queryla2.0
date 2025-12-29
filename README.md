@@ -36,7 +36,7 @@ React.js
 
 HTML, CSS
 
-TailwindCSS / Bootstrap
+TailwindCSS
 
 Backend
 
