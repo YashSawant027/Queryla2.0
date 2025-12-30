@@ -83,16 +83,64 @@ def json_serial(obj):
         return float(obj)
     return str(obj)
 
-async def generate_chart_config_ai(user_question: str, data: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+def generate_chart_config_heuristic(data: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
     """
-    Uses the LLM to intelligently decide the best chart configuration based on the User's Question 
-    and the actual Data Schema returned.
+    Fallback deterministic logic if AI fails to suggest a chart.
     """
     if not data or len(data) == 0:
         return None
+        
+    first_row = data[0]
+    keys = list(first_row.keys())
     
-    # We send the columns and the first row to the AI so it knows the data shape
-    # We avoid sending all data to save tokens and privacy
+    # 1. Identify Label Key
+    label_key = None
+    for k, v in first_row.items():
+        if isinstance(v, (str, datetime.date, datetime.datetime)):
+            if k.lower() not in ['id', '_id', 'uuid', 'guid']:
+                label_key = k
+                break
+    if not label_key and keys:
+        label_key = keys[0]
+
+    # 2. Identify Value Key
+    value_key = None
+    for k, v in first_row.items():
+        if isinstance(v, (int, float, Decimal)):
+            k_lower = k.lower()
+            if not (k_lower == 'id' or k_lower.endswith('_id') or k_lower.endswith('id')):
+                value_key = k
+                break
+
+    if label_key and value_key:
+        chart_type = "bar"
+        
+        is_time = False
+        val = first_row.get(label_key)
+        if isinstance(val, (datetime.date, datetime.datetime)):
+            is_time = True
+        elif isinstance(val, str) and (len(val) == 4 and val.isdigit() and int(val) > 1900):
+             is_time = True
+        elif label_key.lower() in ["date", "time", "year", "month", "day"]:
+             is_time = True
+             
+        if is_time:
+            chart_type = "line"
+        elif len(data) <= 6:
+            chart_type = "pie"
+            
+        return {
+            "type": chart_type,
+            "labelKey": label_key,
+            "valueKey": value_key,
+            "color": "#8884d8"
+        }
+    return None
+
+async def generate_chart_config_ai(user_question: str, data: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    if not data or len(data) == 0:
+        return None
+    
     data_sample = {
         "columns": list(data[0].keys()),
         "first_row_sample": data[0]
@@ -108,24 +156,24 @@ async def generate_chart_config_ai(user_question: str, data: List[Dict[str, Any]
         Data Schema/Sample: {json.dumps(data_sample, default=json_serial)}
         
         Task: 
-        Recommend the best chart type (bar, line, pie) to visualize this data based on the user's intent and the data type.
+        Determine the best chart type to visualize this data.
         
-        Rules:
-        1. If the user asks for a trend, over time, or timeline -> Use "line".
-        2. If the user asks for distribution, proportion, or breakdown -> Use "pie" (only if <= 8 data points).
-        3. If comparing values across categories -> Use "bar".
-        4. IGNORE ID columns (like 'id', 'user_id', '_id') for the value axis unless it's a COUNT.
-        5. Return 'null' if no chart is appropriate (e.g. single number result, text list).
+        CRITICAL RULES:
+        1. ALWAYS generate a chart config if there is at least one categorical/date column and one numeric column (that isn't an ID).
+        2. Use "line" for trends/dates.
+        3. Use "pie" for distributions (only if <= 8 items).
+        4. Use "bar" for comparisons.
+        5. Ignore ID columns ('id', '_id') for the Value axis.
         
         Output JSON Format:
         {{
             "type": "bar" | "line" | "pie",
-            "labelKey": "key_for_x_axis_or_labels",
-            "valueKey": "key_for_y_axis_or_values",
+            "labelKey": "key_for_x_axis",
+            "valueKey": "key_for_y_axis",
             "color": "#8884d8"
         }}
         
-        Return ONLY valid JSON. No markdown.
+        Return ONLY valid JSON. No markdown. If absolutely no chart is possible, return 'null'.
         """
         
         response = llm.invoke(prompt)
@@ -136,16 +184,16 @@ async def generate_chart_config_ai(user_question: str, data: List[Dict[str, Any]
             
         config = json.loads(content)
         
-        # Validate that keys actually exist in data
+        # Validate keys
         first_row_keys = data[0].keys()
         if config["labelKey"] not in first_row_keys or config["valueKey"] not in first_row_keys:
-            return None # Fallback if AI hallucinates a key
+            return None 
             
         return config
         
     except Exception as e:
         print(f"AI Chart Config Error: {e}")
-        return None # Fail gracefully to no chart
+        return None 
 
 @app.get("/health")
 def health_check():
@@ -154,13 +202,16 @@ def health_check():
 
 @app.get("/examples")
 def get_connection_examples():
-    """Returns example connection strings for supported databases."""
     return CONNECTION_EXAMPLES
 
 @app.post("/connect")
 async def connect_database(request: ConnectRequest):
     global db_instance, agent_executor, current_dialect, mongo_client, mongo_db_name
     
+    # Check for API Key
+    if not os.getenv("GROQ_API_KEY"):
+        raise HTTPException(status_code=500, detail="GROQ_API_KEY not found in environment variables.")
+
     # Reset state
     db_instance = None
     mongo_client = None
@@ -170,22 +221,18 @@ async def connect_database(request: ConnectRequest):
         connection_str = request.connection_string.strip()
         
         # --- MONGODB HANDLER ---
-        # This checks for BOTH standard mongodb:// and Atlas mongodb+srv://
         if connection_str.startswith("mongodb://") or connection_str.startswith("mongodb+srv://"):
             current_dialect = "mongodb"
             try:
                 mongo_client = MongoClient(connection_str)
-                # Quick check
                 mongo_client.admin.command('ping')
                 
-                # Extract DB name from connection string or default
                 try:
                     mongo_db_name = pymongo.uri_parser.parse_uri(connection_str)['database']
                 except:
                     mongo_db_name = None
                 
                 if not mongo_db_name:
-                    # Fallback: use the first non-admin/local db
                     dbs = mongo_client.list_database_names()
                     mongo_db_name = next((db for db in dbs if db not in ['admin', 'local', 'config']), 'test')
 
@@ -199,37 +246,27 @@ async def connect_database(request: ConnectRequest):
             except Exception as e:
                 raise HTTPException(status_code=400, detail=f"MongoDB Connection Failed: {str(e)}")
 
-        # --- SQL HANDLER (Driver Injection) ---
-        # PostgreSQL
+        # --- SQL HANDLER ---
         if connection_str.startswith("postgres://"):
             connection_str = connection_str.replace("postgres://", "postgresql+psycopg2://", 1)
         elif connection_str.startswith("postgresql://") and "+" not in connection_str:
             connection_str = connection_str.replace("postgresql://", "postgresql+psycopg2://", 1)
-            
-        # MySQL / MariaDB
         elif connection_str.startswith("mysql://"):
             connection_str = connection_str.replace("mysql://", "mysql+pymysql://", 1)
         elif connection_str.startswith("mariadb://"):
             connection_str = connection_str.replace("mariadb://", "mysql+pymysql://", 1)
-            
-        # Oracle
         elif connection_str.startswith("oracle://"):
             connection_str = connection_str.replace("oracle://", "oracle+oracledb://", 1)
-            
-        # MSSQL
         elif connection_str.startswith("mssql://"):
             connection_str = connection_str.replace("mssql://", "mssql+pyodbc://", 1)
 
         print(f"Connecting to SQL: {connection_str.split('@')[-1]}") 
 
-        # Initialize SQL Connection
         db_instance = SQLDatabase.from_uri(connection_str)
         current_dialect = db_instance.dialect
         
-        # Initialize LLM
         llm = ChatGroq(temperature=0, model_name="llama-3.1-8b-instant")
         
-        # Create SQL Agent
         agent_executor = create_sql_agent(
             llm=llm,
             db=db_instance,
@@ -252,7 +289,6 @@ async def connect_database(request: ConnectRequest):
         if "No module named" in msg:
             msg += " (Make sure the required database driver is installed via pip)"
         
-        # Add examples to the error message for better UX
         examples_text = "\n".join([f"- {k}: {v}" for k, v in CONNECTION_EXAMPLES.items()])
         detail_msg = f"Failed to connect: {msg}\n\nSupported Formats:\n{examples_text}"
         
@@ -266,9 +302,7 @@ async def process_query(request: QueryRequest):
         raise HTTPException(status_code=400, detail="Database not connected. Please call /connect first.")
     
     try:
-        # Initialize LLM
         llm = ChatGroq(temperature=0, model_name="llama-3.1-8b-instant")
-
         sql_query = ""
         data = []
 
@@ -285,20 +319,13 @@ async def process_query(request: QueryRequest):
             
             Task:
             1. Construct a MongoDB Aggregation Pipeline to answer the question.
-            2. Return ONLY a valid JSON object with two keys: 
-               - "collection": name of the collection to query
-               - "pipeline": the aggregation pipeline list (array of objects)
+            2. Return ONLY a valid JSON object.
             
             Example Output Format:
             {{
                 "collection": "sales",
-                "pipeline": [
-                    {{"$match": {{"status": "completed"}}}},
-                    {{"$group": {{"_id": "$product", "total": {{"$sum": "$amount"}}}}}}
-                ]
+                "pipeline": [ ... ]
             }}
-            
-            Do not include markdown formatting (like ```json). Return raw JSON only.
             """
             
             response = llm.invoke(prompt)
@@ -308,20 +335,16 @@ async def process_query(request: QueryRequest):
                 query_spec = json.loads(result_str)
                 collection_name = query_spec["collection"]
                 pipeline = query_spec["pipeline"]
-                sql_query = json.dumps(query_spec, indent=2) # Display format
+                sql_query = json.dumps(query_spec, indent=2) 
                 
-                # Execute Mongo Query
                 db = mongo_client[mongo_db_name]
                 cursor = db[collection_name].aggregate(pipeline)
                 
-                # Convert BSON results to JSON-serializable list
                 for doc in cursor:
                     if '_id' in doc:
                         doc['_id'] = str(doc['_id'])
                     data.append(doc)
                 
-            except json.JSONDecodeError:
-                raise HTTPException(status_code=500, detail="AI generated invalid JSON for MongoDB query.")
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"MongoDB Execution Error: {str(e)}")
 
@@ -354,8 +377,12 @@ async def process_query(request: QueryRequest):
                     data = [{"status": "Query executed successfully, no rows returned"}]
 
         # --- GENERATE SMART CHART CONFIG ---
-        # Now we use the AI to decide the chart type based on the user's intent + actual data
+        # 1. Try AI First
         chart_config = await generate_chart_config_ai(request.text, data)
+        
+        # 2. Fallback to Heuristic if AI returned None
+        if not chart_config:
+            chart_config = generate_chart_config_heuristic(data)
 
         return QueryResponse(
             answer="Query executed successfully.",
@@ -370,6 +397,5 @@ async def process_query(request: QueryRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    # Use the PORT environment variable provided by Railway, or default to 8080
     port = int(os.environ.get("PORT", 8080))
     uvicorn.run(app, host="0.0.0.0", port=port)

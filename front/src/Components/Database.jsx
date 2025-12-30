@@ -33,14 +33,23 @@ const API_BASE_URL = "https://queryla20-production-7245.up.railway.app";
 
 const SimpleLineChart = ({ data, labelKey, valueKey, color = "#8884d8" }) => {
   if (!data || data.length === 0) return <div className="text-gray-400 p-4">No data to chart</div>;
+  
   const values = data.map(d => Number(d[valueKey]) || 0);
   const max = Math.max(...values);
-  const min = 0; 
-  const range = max - min || 1;
+  const min = Math.min(...values); 
+  const effectiveMin = min > 0 ? 0 : min;
+  const range = max - effectiveMin || 1;
+
   const getX = (index) => data.length <= 1 ? 50 : (index / (data.length - 1)) * 100;
-  const getY = (val) => 100 - (((val - min) / range) * 100); 
-  const points = data.map((d, i) => `${getX(i)},${getY(Number(d[valueKey]) || 0)}`).join(' ');
-  let ticks = [0, 0.25, 0.5, 0.75, 1].map(pct => Math.round(min + (range * pct)));
+  const getY = (val) => 100 - (((val - effectiveMin) / range) * 100); 
+  
+  const points = data.map((d, i) => {
+    const val = parseFloat(d[valueKey]);
+    const safeVal = isNaN(val) ? 0 : val;
+    return `${getX(i)},${getY(safeVal)}`;
+  }).join(' ');
+
+  let ticks = [0, 0.25, 0.5, 0.75, 1].map(pct => Math.round(effectiveMin + (range * pct)));
   ticks = [...new Set(ticks)].sort((a, b) => b - a);
 
   return (
@@ -58,13 +67,17 @@ const SimpleLineChart = ({ data, labelKey, valueKey, color = "#8884d8" }) => {
                 <polyline points={points} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
               </svg>
               <div className="absolute inset-0 pointer-events-none">
-                 {data.map((d, i) => (
-                   <div key={i} className="absolute bg-white border border-solid rounded-full transform -translate-x-1/2 -translate-y-1/2 shadow-sm pointer-events-auto cursor-pointer group" style={{ left: `${getX(i)}%`, top: `${getY(Number(d[valueKey]) || 0)}%`, borderColor: color, width: '6px', height: '6px', borderWidth: '1.5px' }}>
-                      <div className="opacity-0 group-hover:opacity-100 absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-white border border-gray-200 text-gray-600 text-[10px] px-2 py-1 rounded shadow-sm whitespace-nowrap z-20 pointer-events-none transition-opacity duration-200">
-                          <span className="font-bold text-[#8884d8]">{d[labelKey]}:</span> {d[valueKey]}
-                       </div>
-                   </div>
-                 ))}
+                 {data.map((d, i) => {
+                   const val = parseFloat(d[valueKey]);
+                   const safeVal = isNaN(val) ? 0 : val;
+                   return (
+                     <div key={i} className="absolute bg-white border border-solid rounded-full transform -translate-x-1/2 -translate-y-1/2 shadow-sm pointer-events-auto cursor-pointer group" style={{ left: `${getX(i)}%`, top: `${getY(safeVal)}%`, borderColor: color, width: '6px', height: '6px', borderWidth: '1.5px' }}>
+                        <div className="opacity-0 group-hover:opacity-100 absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-white border border-gray-200 text-gray-600 text-[10px] px-2 py-1 rounded shadow-sm whitespace-nowrap z-20 pointer-events-none transition-opacity duration-200">
+                            <span className="font-bold text-[#8884d8]">{d[labelKey]}:</span> {safeVal}
+                         </div>
+                     </div>
+                   );
+                 })}
               </div>
            </div>
        </div>
@@ -79,7 +92,14 @@ const SimpleLineChart = ({ data, labelKey, valueKey, color = "#8884d8" }) => {
 
 const SimplePieChart = ({ data, labelKey, valueKey }) => {
   if (!data || data.length === 0) return <div className="text-gray-400 p-4">No data to chart</div>;
-  const total = data.reduce((acc, curr) => acc + (Number(curr[valueKey]) || 0), 0);
+  
+  const total = data.reduce((acc, curr) => {
+    const val = parseFloat(curr[valueKey]);
+    return acc + (isNaN(val) ? 0 : val);
+  }, 0);
+  
+  const safeTotal = total === 0 ? 1 : total;
+
   const getCoordinatesForPercent = (percent) => [Math.cos(2 * Math.PI * percent), Math.sin(2 * Math.PI * percent)];
   const colors = ['#8884d8', '#83a6ed', '#8dd1e1', '#82ca9d', '#a4de6c', '#d0ed57', '#ffc658', '#8884d8'];
 
@@ -89,11 +109,16 @@ const SimplePieChart = ({ data, labelKey, valueKey }) => {
       <div className="relative w-40 h-40 sm:w-48 sm:h-48 flex-shrink-0">
         <svg viewBox="-1 -1 2 2" className="transform -rotate-90 w-full h-full">
           {data.map((slice, i) => {
-            const value = Number(slice[valueKey]) || 0;
-            const percent = value / total;
+            const rawVal = parseFloat(slice[valueKey]);
+            const value = isNaN(rawVal) ? 0 : rawVal;
+            const percent = value / safeTotal;
+            if (percent < 0.001) return null;
+
             const start = getCoordinatesForPercent(cumulativePercent);
             cumulativePercent += percent;
             const end = getCoordinatesForPercent(cumulativePercent);
+            if (percent >= 0.999) return <circle key={i} cx="0" cy="0" r="1" fill={colors[i % colors.length]} />;
+
             const largeArcFlag = percent > 0.5 ? 1 : 0;
             const pathData = [`M 0 0`, `L ${start[0]} ${start[1]}`, `A 1 1 0 ${largeArcFlag} 1 ${end[0]} ${end[1]}`, `Z`].join(' ');
             return <path key={i} d={pathData} fill={colors[i % colors.length]} stroke="white" strokeWidth="0.02" className="hover:opacity-80 transition-opacity cursor-pointer"><title>{slice[labelKey]}: {value} ({Math.round(percent * 100)}%)</title></path>;
@@ -101,13 +126,17 @@ const SimplePieChart = ({ data, labelKey, valueKey }) => {
         </svg>
       </div>
       <div className="mt-4 sm:mt-0 sm:ml-8 text-xs space-y-1 w-full sm:w-auto max-h-32 sm:max-h-48 overflow-y-auto">
-        {data.map((item, i) => (
-          <div key={i} className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: colors[i % colors.length] }}></div>
-            <span className="text-slate-600 font-medium truncate max-w-[120px]">{item[labelKey]}</span>
-            <span className="text-slate-400">({Math.round((Number(item[valueKey])/total)*100)}%)</span>
-          </div>
-        ))}
+        {data.map((item, i) => {
+           const rawVal = parseFloat(item[valueKey]);
+           const value = isNaN(rawVal) ? 0 : rawVal;
+           return (
+            <div key={i} className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: colors[i % colors.length] }}></div>
+              <span className="text-slate-600 font-medium truncate max-w-[120px]">{item[labelKey]}</span>
+              <span className="text-slate-400">({Math.round((value/safeTotal)*100)}%)</span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -193,7 +222,7 @@ const ConnectionForm = ({ onConnect, isConnecting, isConnected, onDisconnect, cu
     const ports = {
       postgresql: '5432',
       mysql: '3306',
-      mariadb: '3306', // Added MariaDB port
+      mariadb: '3306',
       mongodb: '27017',
       'mongodb-atlas': '', 
       oracle: '1521',
@@ -214,7 +243,7 @@ const ConnectionForm = ({ onConnect, isConnecting, isConnected, onDisconnect, cu
     switch (dbType) {
       case 'postgresql': return `postgresql://${userPass}${host}:${port}/${database}`;
       case 'mysql': return `mysql://${userPass}${host}:${port}/${database}`;
-      case 'mariadb': return `mariadb://${userPass}${host}:${port}/${database}`; // Added MariaDB string
+      case 'mariadb': return `mariadb://${userPass}${host}:${port}/${database}`;
       case 'mongodb': return `mongodb://${userPass}${host}:${port}/${database}?authSource=admin`; 
       case 'mongodb-atlas': return `mongodb+srv://${userPass}${host}/${database}?retryWrites=true&w=majority`;
       case 'oracle': return `oracle://${userPass}${host}:${port}/${service}`;
@@ -281,7 +310,7 @@ const ConnectionForm = ({ onConnect, isConnecting, isConnected, onDisconnect, cu
             <select value={dbType} onChange={(e) => setDbType(e.target.value)} className="w-full text-sm p-2 border border-slate-300 rounded bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
               <option value="postgresql">PostgreSQL</option>
               <option value="mysql">MySQL</option>
-              <option value="mariadb">MariaDB</option> {/* Added MariaDB */}
+              <option value="mariadb">MariaDB</option>
               <option value="mongodb">MongoDB (Local/Standard)</option>
               <option value="mongodb-atlas">MongoDB (Atlas Cloud)</option>
               <option value="oracle">Oracle</option>
@@ -357,7 +386,7 @@ export default function SQLAssistant() {
     { label: "MySQL (Public RFAM)", value: "mysql://rfamro:4@mysql-rfam-public.ebi.ac.uk:4497/Rfam" },
     { label: "MongoDB (Atlas)", value: "mongodb+srv://[USER]:[PASSWORD]@[CLUSTER].mongodb.net/test?retryWrites=true&w=majority" },
     { label: "Oracle (Cloud)", value: "oracle://[USER]:[PASSWORD]@[HOST]:1522/[SERVICE_NAME]" },
-    { label: "MariaDB", value: "mariadb://[USER]:[PASSWORD]@[HOST]:3306/[DBNAME]" }, // Added MariaDB demo
+    { label: "MariaDB", value: "mariadb://[USER]:[PASSWORD]@[HOST]:3306/[DBNAME]" }, 
   ];
 
   useEffect(() => {
@@ -441,7 +470,12 @@ export default function SQLAssistant() {
         }) || keys[0];
 
         const valueKey = keys.find(k => {
-            if (typeof firstRow[k] !== 'number') return false;
+            if (typeof firstRow[k] !== 'number' && typeof firstRow[k] !== 'string') return false; // Basic check
+            
+            // Check if parsing works
+            const parsedVal = parseFloat(firstRow[k]);
+            if (isNaN(parsedVal)) return false;
+
             const keyLower = k.toLowerCase();
             const isId = keyLower === 'id' || keyLower.endsWith('_id') || keyLower.endsWith('id') || keyLower === 'pk';
             const isCode = keyLower.includes('code') || keyLower.includes('zip') || keyLower.includes('phone') || keyLower.includes('serial') || keyLower.includes('number') || keyLower.includes('no.');
@@ -506,7 +540,7 @@ export default function SQLAssistant() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-[90vh] mt-18 w-full bg-slate-50 text-slate-900 font-sans overflow-hidden">
+    <div className="flex flex-col md:flex-row h-screen w-full bg-slate-50 text-slate-900 font-sans overflow-hidden">
       
       {/* CONNECTION PANEL */}
       <div className={`
@@ -521,9 +555,9 @@ export default function SQLAssistant() {
             }
           }}
         >
-          <div className="flex items-center gap-2 font-bold text-xl">
+          <div className="flex items-center gap-2 text-indigo-600 font-bold text-xl">
             <Database className="w-6 h-6" />
-            <span>Connection</span>
+            <span>DataLingo AI</span>
           </div>
           
           <div className="flex items-center gap-2">
