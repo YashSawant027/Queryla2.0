@@ -22,7 +22,8 @@ import {
   Laptop,
   Cloud,
   Eye,
-  EyeOff
+  EyeOff,
+  Globe // Added Globe icon for generic cloud
 } from 'lucide-react';
 
 // --- CONFIGURATION ---
@@ -32,13 +33,24 @@ const API_BASE_URL = "https://queryla20-production-7245.up.railway.app";
 
 const SimpleLineChart = ({ data, labelKey, valueKey, color = "#8884d8" }) => {
   if (!data || data.length === 0) return <div className="text-gray-400 p-4">No data to chart</div>;
+  
   const values = data.map(d => Number(d[valueKey]) || 0);
   const max = Math.max(...values);
   const min = 0; 
   const range = max - min || 1;
-  const getX = (index) => data.length <= 1 ? 50 : (index / (data.length - 1)) * 100;
-  const getY = (val) => 100 - (((val - min) / range) * 100); 
+
+  const getX = (index) => {
+      if (data.length <= 1) return 50;
+      return (index / (data.length - 1)) * 100;
+  };
+  
+  const getY = (val) => {
+      const normalized = (val - min) / range;
+      return 100 - (normalized * 100); 
+  };
+
   const points = data.map((d, i) => `${getX(i)},${getY(Number(d[valueKey]) || 0)}`).join(' ');
+
   let ticks = [0, 0.25, 0.5, 0.75, 1].map(pct => Math.round(min + (range * pct)));
   ticks = [...new Set(ticks)].sort((a, b) => b - a);
 
@@ -46,19 +58,46 @@ const SimpleLineChart = ({ data, labelKey, valueKey, color = "#8884d8" }) => {
     <div className="w-full h-64 sm:h-72 p-2 sm:p-4 border rounded bg-white flex flex-col font-sans">
        <div className="flex flex-1 min-h-0 relative">
            <div className="flex flex-col justify-between text-[8px] sm:text-[10px] text-[#666] pr-2 select-none h-full py-1">
-              {ticks.map((tick, i) => <span key={i} className="leading-none text-right w-6 sm:w-8">{tick}</span>)}
+              {ticks.map((tick, i) => (
+                 <span key={i} className="leading-none text-right w-6 sm:w-8">{tick}</span>
+              ))}
            </div>
+
            <div className="flex-1 relative">
               <svg className="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 100 100">
                 {ticks.map((tick) => {
                    const yPos = getY(tick);
-                   return <line key={tick} x1="0" y1={yPos} x2="100" y2={yPos} stroke="#ccc" strokeWidth="1" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />;
+                   return (
+                     <line key={tick} x1="0" y1={yPos} x2="100" y2={yPos} stroke="#ccc" strokeWidth="1" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />
+                   );
                 })}
-                <polyline points={points} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+                
+                <polyline 
+                  points={points}
+                  fill="none"
+                  stroke={color}
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  vectorEffect="non-scaling-stroke"
+                />
               </svg>
+
+              {/* Data Points as Divs to prevent stretching */}
               <div className="absolute inset-0 pointer-events-none">
                  {data.map((d, i) => (
-                   <div key={i} className="absolute bg-white border border-solid rounded-full transform -translate-x-1/2 -translate-y-1/2 shadow-sm pointer-events-auto cursor-pointer group" style={{ left: `${getX(i)}%`, top: `${getY(Number(d[valueKey]) || 0)}%`, borderColor: color, width: '6px', height: '6px', borderWidth: '1.5px' }}>
+                   <div 
+                     key={i}
+                     className="absolute bg-white border border-solid rounded-full transform -translate-x-1/2 -translate-y-1/2 shadow-sm pointer-events-auto cursor-pointer group"
+                     style={{ 
+                       left: `${getX(i)}%`, 
+                       top: `${getY(Number(d[valueKey]) || 0)}%`,
+                       borderColor: color,
+                       width: '6px',
+                       height: '6px',
+                       borderWidth: '1.5px'
+                     }}
+                   >
                       <div className="opacity-0 group-hover:opacity-100 absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-white border border-gray-200 text-gray-600 text-[10px] px-2 py-1 rounded shadow-sm whitespace-nowrap z-20 pointer-events-none transition-opacity duration-200">
                           <span className="font-bold text-[#8884d8]">{d[labelKey]}:</span> {d[valueKey]}
                        </div>
@@ -67,9 +106,16 @@ const SimpleLineChart = ({ data, labelKey, valueKey, color = "#8884d8" }) => {
               </div>
            </div>
        </div>
+
        <div className="flex relative h-6 mt-2 ml-8 sm:ml-10 select-none">
           {data.map((d, i) => (
-             <div key={i} className="absolute text-[8px] sm:text-[10px] text-[#666] transform -translate-x-1/2 text-center w-8 sm:w-12 truncate" style={{ left: `${getX(i)}%` }}>{d[labelKey]}</div>
+             <div 
+               key={i} 
+               className="absolute text-[8px] sm:text-[10px] text-[#666] transform -translate-x-1/2 text-center w-8 sm:w-12 truncate"
+               style={{ left: `${getX(i)}%` }}
+             >
+                {d[labelKey]}
+             </div>
           ))}
        </div>
     </div>
@@ -78,9 +124,16 @@ const SimpleLineChart = ({ data, labelKey, valueKey, color = "#8884d8" }) => {
 
 const SimplePieChart = ({ data, labelKey, valueKey }) => {
   if (!data || data.length === 0) return <div className="text-gray-400 p-4">No data to chart</div>;
+
   const total = data.reduce((acc, curr) => acc + (Number(curr[valueKey]) || 0), 0);
   let cumulativePercent = 0;
-  const getCoordinatesForPercent = (percent) => [Math.cos(2 * Math.PI * percent), Math.sin(2 * Math.PI * percent)];
+
+  const getCoordinatesForPercent = (percent) => {
+    const x = Math.cos(2 * Math.PI * percent);
+    const y = Math.sin(2 * Math.PI * percent);
+    return [x, y];
+  };
+
   const colors = ['#8884d8', '#83a6ed', '#8dd1e1', '#82ca9d', '#a4de6c', '#d0ed57', '#ffc658', '#8884d8'];
 
   return (
@@ -94,8 +147,25 @@ const SimplePieChart = ({ data, labelKey, valueKey }) => {
             cumulativePercent += percent;
             const end = getCoordinatesForPercent(cumulativePercent);
             const largeArcFlag = percent > 0.5 ? 1 : 0;
-            const pathData = [`M 0 0`, `L ${start[0]} ${start[1]}`, `A 1 1 0 ${largeArcFlag} 1 ${end[0]} ${end[1]}`, `Z`].join(' ');
-            return <path key={i} d={pathData} fill={colors[i % colors.length]} stroke="white" strokeWidth="0.02" className="hover:opacity-80 transition-opacity cursor-pointer"><title>{slice[labelKey]}: {value} ({Math.round(percent * 100)}%)</title></path>;
+            const pathData = [
+              `M 0 0`,
+              `L ${start[0]} ${start[1]}`,
+              `A 1 1 0 ${largeArcFlag} 1 ${end[0]} ${end[1]}`,
+              `Z`
+            ].join(' ');
+
+            return (
+              <path 
+                key={i} 
+                d={pathData} 
+                fill={colors[i % colors.length]} 
+                stroke="white" 
+                strokeWidth="0.02"
+                className="hover:opacity-80 transition-opacity cursor-pointer"
+              >
+                <title>{slice[labelKey]}: {value} ({Math.round(percent * 100)}%)</title>
+              </path>
+            );
           })}
         </svg>
       </div>
@@ -523,7 +593,7 @@ export default function SQLAssistant() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-[90vh] mt-18 w-full bg-slate-50 text-slate-900 font-sans overflow-hidden">
+    <div className="flex flex-col md:flex-row h-screen w-full bg-slate-50 text-slate-900 font-sans overflow-hidden">
       
       {/* CONNECTION PANEL */}
       <div className={`
@@ -538,9 +608,9 @@ export default function SQLAssistant() {
             }
           }}
         >
-          <div className="flex items-center gap-2 font-bold text-xl">
+          <div className="flex items-center gap-2 text-indigo-600 font-bold text-xl">
             <Database className="w-6 h-6" />
-            <span>Connection</span>
+            <span>DataLingo AI</span>
           </div>
           
           <div className="flex items-center gap-2">
@@ -562,10 +632,16 @@ export default function SQLAssistant() {
                       <Cloud className="w-3 h-3" /> Cloud (Railway)
                     </button>
                     <button 
-                      onClick={(e) => { e.stopPropagation(); setApiBaseUrl("http://localhost:8080"); setShowSettings(false); }}
-                      className={`w-full flex items-center gap-2 px-2 py-1.5 text-xs rounded ${apiBaseUrl.includes('localhost') ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-slate-50 text-slate-600'}`}
+                      onClick={(e) => { e.stopPropagation(); setApiBaseUrl("https://your-render-url.onrender.com"); setShowSettings(false); }}
+                      className={`w-full flex items-center gap-2 px-2 py-1.5 text-xs rounded ${apiBaseUrl.includes('render') ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-slate-50 text-slate-600'}`}
                     >
-                      <Laptop className="w-3 h-3" /> Local (Port 8080)
+                      <Globe className="w-3 h-3" /> Cloud (Render)
+                    </button>
+                     <button 
+                      onClick={(e) => { e.stopPropagation(); setApiBaseUrl("https://api.your-aws-deployment.com"); setShowSettings(false); }}
+                      className={`w-full flex items-center gap-2 px-2 py-1.5 text-xs rounded ${apiBaseUrl.includes('aws') ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-slate-50 text-slate-600'}`}
+                    >
+                      <Server className="w-3 h-3" /> Cloud (AWS)
                     </button>
                   </div>
                 )}
