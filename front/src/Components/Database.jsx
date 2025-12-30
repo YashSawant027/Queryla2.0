@@ -196,7 +196,8 @@ const ConnectionForm = ({ onConnect, isConnecting, isConnected, onDisconnect, cu
       mariadb: '3306', // Added MariaDB port
       mongodb: '27017',
       'mongodb-atlas': '', 
-      oracle: '1521'
+      oracle: '1521',
+      mssql: '1433'
     };
     setFormData(prev => ({ ...prev, port: ports[dbType] || '' }));
   }, [dbType]);
@@ -217,6 +218,7 @@ const ConnectionForm = ({ onConnect, isConnecting, isConnected, onDisconnect, cu
       case 'mongodb': return `mongodb://${userPass}${host}:${port}/${database}?authSource=admin`; 
       case 'mongodb-atlas': return `mongodb+srv://${userPass}${host}/${database}?retryWrites=true&w=majority`;
       case 'oracle': return `oracle://${userPass}${host}:${port}/${service}`;
+      case 'mssql': return `mssql://${userPass}${host}:${port}/${database}`;
       default: return '';
     }
   };
@@ -453,14 +455,8 @@ export default function SQLAssistant() {
         let shouldChart = false;
         
         if (labelKey && valueKey) {
-            if (explicitChartIntent || aggregateIntent) {
-                shouldChart = true;
-            } else {
-                const metricKeywords = ['mark', 'score', 'grade', 'point', 'sales', 'revenue', 'profit', 'amount', 'qty', 'quantity', 'price', 'cost', 'salary'];
-                if (metricKeywords.some(w => valueKey.toLowerCase().includes(w))) {
-                    shouldChart = true;
-                }
-            }
+            // ALWAYS set to true if keys are found
+            shouldChart = true;
         }
 
         if (shouldChart && labelKey && valueKey) {
@@ -510,7 +506,7 @@ export default function SQLAssistant() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-screen w-full bg-slate-50 text-slate-900 font-sans overflow-hidden">
+    <div className="flex flex-col md:flex-row h-[90vh] mt-18 w-full bg-slate-50 text-slate-900 font-sans overflow-hidden">
       
       {/* CONNECTION PANEL */}
       <div className={`
@@ -525,9 +521,9 @@ export default function SQLAssistant() {
             }
           }}
         >
-          <div className="flex items-center gap-2 text-indigo-600 font-bold text-xl">
+          <div className="flex items-center gap-2 font-bold text-xl">
             <Database className="w-6 h-6" />
-            <span>DataLingo AI</span>
+            <span>Connection</span>
           </div>
           
           <div className="flex items-center gap-2">
