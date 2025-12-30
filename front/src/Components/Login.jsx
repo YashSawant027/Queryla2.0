@@ -24,7 +24,7 @@ function Login() {
 
         try{
             setloading(true)
-            const response = await axios.post('http://0.0.0.0:8000/api/v1/LoginPage', userdata)
+            const response = await axios.post('https://queryla20-production.up.railway.app', userdata)
             localStorage.setItem('accessToken', response.data.access)
             localStorage.setItem('refreshToken', response.data.refresh)
             console.log("Login successfull")

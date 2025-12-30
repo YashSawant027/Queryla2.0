@@ -22,7 +22,7 @@ function Register() {
 
         try{
             setloading(true)
-            const response = await axios.post('http://0.0.0.0:8000/api/v1/RegisterPage', userdata)
+            const response = await axios.post('https://queryla20-production.up.railway.app', userdata)
             console.log("Registration successfull")
             seterror({})
             navigate('/login')
