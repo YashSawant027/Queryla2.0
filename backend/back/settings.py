@@ -28,7 +28,11 @@ SECRET_KEY = 'django-insecure-l+-#**@tap4zt8c21)njiwwf9t02=7!w(+$0)snwv*nk7c86st
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'queryla20-production.up.railway.app',
+    'localhost',
+    '127.0.0.1'
+]
 
 
 # Application definition
@@ -140,5 +144,4 @@ REST_FRAMEWORK = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "https://yashsawant027.github.io",
-    "queryla20-production.up.railway.app"
 ]
