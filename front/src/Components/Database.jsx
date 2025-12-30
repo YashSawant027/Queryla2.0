@@ -540,7 +540,7 @@ export default function SQLAssistant() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-screen w-full bg-slate-50 text-slate-900 font-sans overflow-hidden">
+    <div className="flex flex-col md:flex-row h-[90vh] mt-18 w-full bg-slate-50 text-slate-900 font-sans overflow-hidden">
       
       {/* CONNECTION PANEL */}
       <div className={`
@@ -555,9 +555,9 @@ export default function SQLAssistant() {
             }
           }}
         >
-          <div className="flex items-center gap-2 text-indigo-600 font-bold text-xl">
+          <div className="flex items-center gap-2 font-bold text-xl">
             <Database className="w-6 h-6" />
-            <span>DataLingo AI</span>
+            <span>Connection</span>
           </div>
           
           <div className="flex items-center gap-2">
