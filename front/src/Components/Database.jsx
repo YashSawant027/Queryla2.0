@@ -23,7 +23,7 @@ import {
   Cloud,
   Eye,
   EyeOff,
-  Globe // Added Globe icon for generic cloud
+  Globe
 } from 'lucide-react';
 
 // --- CONFIGURATION ---
@@ -33,24 +33,13 @@ const API_BASE_URL = "https://queryla20-production-7245.up.railway.app";
 
 const SimpleLineChart = ({ data, labelKey, valueKey, color = "#8884d8" }) => {
   if (!data || data.length === 0) return <div className="text-gray-400 p-4">No data to chart</div>;
-  
   const values = data.map(d => Number(d[valueKey]) || 0);
   const max = Math.max(...values);
   const min = 0; 
   const range = max - min || 1;
-
-  const getX = (index) => {
-      if (data.length <= 1) return 50;
-      return (index / (data.length - 1)) * 100;
-  };
-  
-  const getY = (val) => {
-      const normalized = (val - min) / range;
-      return 100 - (normalized * 100); 
-  };
-
+  const getX = (index) => data.length <= 1 ? 50 : (index / (data.length - 1)) * 100;
+  const getY = (val) => 100 - (((val - min) / range) * 100); 
   const points = data.map((d, i) => `${getX(i)},${getY(Number(d[valueKey]) || 0)}`).join(' ');
-
   let ticks = [0, 0.25, 0.5, 0.75, 1].map(pct => Math.round(min + (range * pct)));
   ticks = [...new Set(ticks)].sort((a, b) => b - a);
 
@@ -58,46 +47,19 @@ const SimpleLineChart = ({ data, labelKey, valueKey, color = "#8884d8" }) => {
     <div className="w-full h-64 sm:h-72 p-2 sm:p-4 border rounded bg-white flex flex-col font-sans">
        <div className="flex flex-1 min-h-0 relative">
            <div className="flex flex-col justify-between text-[8px] sm:text-[10px] text-[#666] pr-2 select-none h-full py-1">
-              {ticks.map((tick, i) => (
-                 <span key={i} className="leading-none text-right w-6 sm:w-8">{tick}</span>
-              ))}
+              {ticks.map((tick, i) => <span key={i} className="leading-none text-right w-6 sm:w-8">{tick}</span>)}
            </div>
-
            <div className="flex-1 relative">
               <svg className="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 100 100">
                 {ticks.map((tick) => {
                    const yPos = getY(tick);
-                   return (
-                     <line key={tick} x1="0" y1={yPos} x2="100" y2={yPos} stroke="#ccc" strokeWidth="1" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />
-                   );
+                   return <line key={tick} x1="0" y1={yPos} x2="100" y2={yPos} stroke="#ccc" strokeWidth="1" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />;
                 })}
-                
-                <polyline 
-                  points={points}
-                  fill="none"
-                  stroke={color}
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  vectorEffect="non-scaling-stroke"
-                />
+                <polyline points={points} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
               </svg>
-
-              {/* Data Points as Divs to prevent stretching */}
               <div className="absolute inset-0 pointer-events-none">
                  {data.map((d, i) => (
-                   <div 
-                     key={i}
-                     className="absolute bg-white border border-solid rounded-full transform -translate-x-1/2 -translate-y-1/2 shadow-sm pointer-events-auto cursor-pointer group"
-                     style={{ 
-                       left: `${getX(i)}%`, 
-                       top: `${getY(Number(d[valueKey]) || 0)}%`,
-                       borderColor: color,
-                       width: '6px',
-                       height: '6px',
-                       borderWidth: '1.5px'
-                     }}
-                   >
+                   <div key={i} className="absolute bg-white border border-solid rounded-full transform -translate-x-1/2 -translate-y-1/2 shadow-sm pointer-events-auto cursor-pointer group" style={{ left: `${getX(i)}%`, top: `${getY(Number(d[valueKey]) || 0)}%`, borderColor: color, width: '6px', height: '6px', borderWidth: '1.5px' }}>
                       <div className="opacity-0 group-hover:opacity-100 absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-white border border-gray-200 text-gray-600 text-[10px] px-2 py-1 rounded shadow-sm whitespace-nowrap z-20 pointer-events-none transition-opacity duration-200">
                           <span className="font-bold text-[#8884d8]">{d[labelKey]}:</span> {d[valueKey]}
                        </div>
@@ -106,16 +68,9 @@ const SimpleLineChart = ({ data, labelKey, valueKey, color = "#8884d8" }) => {
               </div>
            </div>
        </div>
-
        <div className="flex relative h-6 mt-2 ml-8 sm:ml-10 select-none">
           {data.map((d, i) => (
-             <div 
-               key={i} 
-               className="absolute text-[8px] sm:text-[10px] text-[#666] transform -translate-x-1/2 text-center w-8 sm:w-12 truncate"
-               style={{ left: `${getX(i)}%` }}
-             >
-                {d[labelKey]}
-             </div>
+             <div key={i} className="absolute text-[8px] sm:text-[10px] text-[#666] transform -translate-x-1/2 text-center w-8 sm:w-12 truncate" style={{ left: `${getX(i)}%` }}>{d[labelKey]}</div>
           ))}
        </div>
     </div>
@@ -124,18 +79,11 @@ const SimpleLineChart = ({ data, labelKey, valueKey, color = "#8884d8" }) => {
 
 const SimplePieChart = ({ data, labelKey, valueKey }) => {
   if (!data || data.length === 0) return <div className="text-gray-400 p-4">No data to chart</div>;
-
   const total = data.reduce((acc, curr) => acc + (Number(curr[valueKey]) || 0), 0);
-  let cumulativePercent = 0;
-
-  const getCoordinatesForPercent = (percent) => {
-    const x = Math.cos(2 * Math.PI * percent);
-    const y = Math.sin(2 * Math.PI * percent);
-    return [x, y];
-  };
-
+  const getCoordinatesForPercent = (percent) => [Math.cos(2 * Math.PI * percent), Math.sin(2 * Math.PI * percent)];
   const colors = ['#8884d8', '#83a6ed', '#8dd1e1', '#82ca9d', '#a4de6c', '#d0ed57', '#ffc658', '#8884d8'];
 
+  let cumulativePercent = 0;
   return (
     <div className="w-full h-64 flex flex-col sm:flex-row items-center justify-center p-4 border rounded bg-white">
       <div className="relative w-40 h-40 sm:w-48 sm:h-48 flex-shrink-0">
@@ -147,25 +95,8 @@ const SimplePieChart = ({ data, labelKey, valueKey }) => {
             cumulativePercent += percent;
             const end = getCoordinatesForPercent(cumulativePercent);
             const largeArcFlag = percent > 0.5 ? 1 : 0;
-            const pathData = [
-              `M 0 0`,
-              `L ${start[0]} ${start[1]}`,
-              `A 1 1 0 ${largeArcFlag} 1 ${end[0]} ${end[1]}`,
-              `Z`
-            ].join(' ');
-
-            return (
-              <path 
-                key={i} 
-                d={pathData} 
-                fill={colors[i % colors.length]} 
-                stroke="white" 
-                strokeWidth="0.02"
-                className="hover:opacity-80 transition-opacity cursor-pointer"
-              >
-                <title>{slice[labelKey]}: {value} ({Math.round(percent * 100)}%)</title>
-              </path>
-            );
+            const pathData = [`M 0 0`, `L ${start[0]} ${start[1]}`, `A 1 1 0 ${largeArcFlag} 1 ${end[0]} ${end[1]}`, `Z`].join(' ');
+            return <path key={i} d={pathData} fill={colors[i % colors.length]} stroke="white" strokeWidth="0.02" className="hover:opacity-80 transition-opacity cursor-pointer"><title>{slice[labelKey]}: {value} ({Math.round(percent * 100)}%)</title></path>;
           })}
         </svg>
       </div>
@@ -238,8 +169,8 @@ const ChartContainer = ({ data, config }) => {
   );
 };
 
-// --- NEW COMPONENT: CONNECTION FORM ---
-const ConnectionForm = ({ onConnect, isConnecting, isConnected, onDisconnect }) => {
+// --- COMPONENT: CONNECTION FORM ---
+const ConnectionForm = ({ onConnect, isConnecting, isConnected, onDisconnect, currentBackendUrl }) => {
   const [dbType, setDbType] = useState('postgresql');
   const [formData, setFormData] = useState({
     host: '',
@@ -253,14 +184,19 @@ const ConnectionForm = ({ onConnect, isConnecting, isConnected, onDisconnect }) 
   const [rawString, setRawString] = useState('');
   const [useRaw, setUseRaw] = useState(false);
 
-  // Update default port when DB type changes
+  // Check for configuration mismatch
+  const isCloudBackend = currentBackendUrl.includes('railway.app') || currentBackendUrl.includes('onrender.com') || currentBackendUrl.includes('aws');
+  const isLocalDB = formData.host.includes('localhost') || formData.host.includes('127.0.0.1');
+  const showWarning = isCloudBackend && isLocalDB;
+
   useEffect(() => {
     const ports = {
       postgresql: '5432',
       mysql: '3306',
+      mariadb: '3306', // Added MariaDB port
       mongodb: '27017',
-      oracle: '1521',
-      mssql: '1433'
+      'mongodb-atlas': '', 
+      oracle: '1521'
     };
     setFormData(prev => ({ ...prev, port: ports[dbType] || '' }));
   }, [dbType]);
@@ -275,18 +211,13 @@ const ConnectionForm = ({ onConnect, isConnecting, isConnected, onDisconnect }) 
     const userPass = username ? `${username}:${password}@` : '';
     
     switch (dbType) {
-      case 'postgresql':
-        return `postgresql://${userPass}${host}:${port}/${database}`;
-      case 'mysql':
-        return `mysql://${userPass}${host}:${port}/${database}`;
-      case 'mongodb':
-        return `mongodb://${userPass}${host}:${port}/${database}?authSource=admin`; // Common default
-      case 'oracle':
-        return `oracle://${userPass}${host}:${port}/${service}`;
-      case 'mssql':
-        return `mssql://${userPass}${host}:${port}/${database}`;
-      default:
-        return '';
+      case 'postgresql': return `postgresql://${userPass}${host}:${port}/${database}`;
+      case 'mysql': return `mysql://${userPass}${host}:${port}/${database}`;
+      case 'mariadb': return `mariadb://${userPass}${host}:${port}/${database}`; // Added MariaDB string
+      case 'mongodb': return `mongodb://${userPass}${host}:${port}/${database}?authSource=admin`; 
+      case 'mongodb-atlas': return `mongodb+srv://${userPass}${host}/${database}?retryWrites=true&w=majority`;
+      case 'oracle': return `oracle://${userPass}${host}:${port}/${service}`;
+      default: return '';
     }
   };
 
@@ -310,24 +241,28 @@ const ConnectionForm = ({ onConnect, isConnecting, isConnected, onDisconnect }) 
             </p>
           </div>
         </div>
-        <button 
-          onClick={onDisconnect}
-          className="w-full py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors"
-        >
-          Disconnect
-        </button>
+        <button onClick={onDisconnect} className="w-full py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors">Disconnect</button>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      {/* Mode Toggle */}
+      {/* Configuration Warning */}
+      {showWarning && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex gap-2 items-start">
+          <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+          <div className="text-[10px] text-amber-800">
+            <span className="font-bold">Configuration Mismatch:</span> You are using a Cloud Backend (Railway) but trying to connect to 'localhost'. 
+            This won't work because the cloud server cannot see your computer. 
+            <br/><br/>
+            <strong>Fix:</strong> Either use a Cloud Database (e.g. Atlas, Supabase) OR switch to a Local Backend (using the Settings gear icon above).
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-end">
-        <button 
-          onClick={() => setUseRaw(!useRaw)}
-          className="text-[10px] text-indigo-600 hover:underline font-medium"
-        >
+        <button onClick={() => setUseRaw(!useRaw)} className="text-[10px] text-indigo-600 hover:underline font-medium">
           {useRaw ? "Use Form Wizard" : "Enter Raw Connection String"}
         </button>
       </div>
@@ -335,40 +270,30 @@ const ConnectionForm = ({ onConnect, isConnecting, isConnected, onDisconnect }) 
       {useRaw ? (
         <div>
           <label className="text-xs font-medium text-slate-500 mb-1 block">Connection String</label>
-          <input 
-            type="text" 
-            value={rawString}
-            onChange={(e) => setRawString(e.target.value)}
-            placeholder="postgresql://user:pass@host:5432/db"
-            className="w-full text-xs p-2 border border-slate-300 rounded bg-slate-50 font-mono focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-          />
+          <input type="text" value={rawString} onChange={(e) => setRawString(e.target.value)} placeholder="postgresql://user:pass@host:5432/db" className="w-full text-xs p-2 border border-slate-300 rounded bg-slate-50 font-mono focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
         </div>
       ) : (
         <div className="space-y-3">
-          {/* DB Selector */}
           <div>
             <label className="text-xs font-medium text-slate-500 mb-1 block">Database Type</label>
-            <select 
-              value={dbType} 
-              onChange={(e) => setDbType(e.target.value)}
-              className="w-full text-sm p-2 border border-slate-300 rounded bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-            >
+            <select value={dbType} onChange={(e) => setDbType(e.target.value)} className="w-full text-sm p-2 border border-slate-300 rounded bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
               <option value="postgresql">PostgreSQL</option>
               <option value="mysql">MySQL</option>
-              <option value="mongodb">MongoDB</option>
+              <option value="mariadb">MariaDB</option> {/* Added MariaDB */}
+              <option value="mongodb">MongoDB (Local/Standard)</option>
+              <option value="mongodb-atlas">MongoDB (Atlas Cloud)</option>
               <option value="oracle">Oracle</option>
-              <option value="mssql">SQL Server</option>
             </select>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="text-[10px] font-medium text-slate-500 mb-1 block">Host</label>
-              <input name="host" value={formData.host} onChange={handleChange} placeholder="localhost" className="w-full text-xs p-2 border border-slate-300 rounded focus:outline-none focus:border-indigo-500" />
+              <label className="text-[10px] font-medium text-slate-500 mb-1 block">Host / Cluster</label>
+              <input name="host" value={formData.host} onChange={handleChange} placeholder={dbType === 'mongodb-atlas' ? "cluster0.abcde.mongodb.net" : "localhost"} className="w-full text-xs p-2 border border-slate-300 rounded focus:outline-none focus:border-indigo-500" />
             </div>
             <div>
               <label className="text-[10px] font-medium text-slate-500 mb-1 block">Port</label>
-              <input name="port" value={formData.port} onChange={handleChange} placeholder="5432" className="w-full text-xs p-2 border border-slate-300 rounded focus:outline-none focus:border-indigo-500" />
+              <input name="port" value={formData.port} onChange={handleChange} placeholder={dbType === 'mongodb-atlas' ? "N/A" : "5432"} disabled={dbType === 'mongodb-atlas'} className={`w-full text-xs p-2 border border-slate-300 rounded focus:outline-none focus:border-indigo-500 ${dbType === 'mongodb-atlas' ? 'bg-slate-100' : ''}`} />
             </div>
           </div>
 
@@ -384,36 +309,20 @@ const ConnectionForm = ({ onConnect, isConnecting, isConnected, onDisconnect }) 
             </div>
             <div className="relative">
               <label className="text-[10px] font-medium text-slate-500 mb-1 block">Password</label>
-              <input 
-                type={showPassword ? "text" : "password"} 
-                name="password" 
-                value={formData.password} 
-                onChange={handleChange} 
-                placeholder="****" 
-                className="w-full text-xs p-2 border border-slate-300 rounded focus:outline-none focus:border-indigo-500 pr-7" 
-              />
-              <button 
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-2 top-[22px] text-slate-400 hover:text-slate-600"
-              >
+              <input type={showPassword ? "text" : "password"} name="password" value={formData.password} onChange={handleChange} placeholder="****" className="w-full text-xs p-2 border border-slate-300 rounded focus:outline-none focus:border-indigo-500 pr-7" />
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-2 top-[22px] text-slate-400 hover:text-slate-600">
                 {showPassword ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
               </button>
             </div>
           </div>
           
-          {/* Preview */}
           <div className="bg-slate-100 p-2 rounded text-[10px] text-slate-500 break-all font-mono">
             {generateConnectionString() || "Complete the form..."}
           </div>
         </div>
       )}
 
-      <button 
-        onClick={handleSubmit}
-        disabled={isConnecting}
-        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-2.5 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 mt-4"
-      >
+      <button onClick={handleSubmit} disabled={isConnecting} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-2.5 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 mt-4">
         {isConnecting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
         {isConnecting ? "Connecting..." : "Connect Database"}
       </button>
@@ -424,7 +333,7 @@ const ConnectionForm = ({ onConnect, isConnecting, isConnected, onDisconnect }) 
 // --- MAIN APP COMPONENT ---
 
 export default function SQLAssistant() {
-  const [apiBaseUrl, setApiBaseUrl] = useState("https://queryla20-production-7245.up.railway.app");
+  const [apiBaseUrl, setApiBaseUrl] = useState(API_BASE_URL);
   const [showSettings, setShowSettings] = useState(false);
   
   const [isConnected, setIsConnected] = useState(false);
@@ -436,10 +345,18 @@ export default function SQLAssistant() {
     { 
       id: 1, 
       type: 'bot', 
-      text: "Hello! I am ready to connect to your Database. Fill in the connection details above to begin." 
+      text: "Hello! I am ready to connect to your Database (Postgres, MySQL, MariaDB, MongoDB, Oracle). Enter your connection string above to begin." 
     }
   ]);
   const messagesEndRef = useRef(null);
+
+  const demoConnectionStrings = [
+    { label: "PostgreSQL (Supabase)", value: "postgresql://postgres:[PASSWORD]@db.[PROJECT].supabase.co:5432/postgres" },
+    { label: "MySQL (Public RFAM)", value: "mysql://rfamro:4@mysql-rfam-public.ebi.ac.uk:4497/Rfam" },
+    { label: "MongoDB (Atlas)", value: "mongodb+srv://[USER]:[PASSWORD]@[CLUSTER].mongodb.net/test?retryWrites=true&w=majority" },
+    { label: "Oracle (Cloud)", value: "oracle://[USER]:[PASSWORD]@[HOST]:1522/[SERVICE_NAME]" },
+    { label: "MariaDB", value: "mariadb://[USER]:[PASSWORD]@[HOST]:3306/[DBNAME]" }, // Added MariaDB demo
+  ];
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -593,7 +510,7 @@ export default function SQLAssistant() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-screen w-full bg-slate-50 text-slate-900 font-sans overflow-hidden">
+    <div className="flex flex-col md:flex-row h-[90vh] mt-18 w-full bg-slate-50 text-slate-900 font-sans overflow-hidden">
       
       {/* CONNECTION PANEL */}
       <div className={`
@@ -608,9 +525,9 @@ export default function SQLAssistant() {
             }
           }}
         >
-          <div className="flex items-center gap-2 text-indigo-600 font-bold text-xl">
+          <div className="flex items-center gap-2 font-bold text-xl">
             <Database className="w-6 h-6" />
-            <span>DataLingo AI</span>
+            <span>Connection</span>
           </div>
           
           <div className="flex items-center gap-2">
@@ -633,7 +550,7 @@ export default function SQLAssistant() {
                     </button>
                     <button 
                       onClick={(e) => { e.stopPropagation(); setApiBaseUrl("https://your-render-url.onrender.com"); setShowSettings(false); }}
-                      className={`w-full flex items-center gap-2 px-2 py-1.5 text-xs rounded ${apiBaseUrl.includes('render') ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-slate-50 text-slate-600'}`}
+                      className={`w-full flex items-center gap-2 px-2 py-1.5 text-xs rounded mb-1 ${apiBaseUrl.includes('render') ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-slate-50 text-slate-600'}`}
                     >
                       <Globe className="w-3 h-3" /> Cloud (Render)
                     </button>
@@ -657,11 +574,13 @@ export default function SQLAssistant() {
           flex-1 overflow-y-auto p-4 md:p-5
           ${isConnectionExpanded ? 'block' : 'hidden md:block'}
         `}>
+          {/* New Connection Form with Config Pass-through */}
           <ConnectionForm 
             onConnect={handleConnect} 
             isConnecting={isConnecting}
             isConnected={isConnected}
             onDisconnect={handleDisconnect}
+            currentBackendUrl={apiBaseUrl} 
           />
 
           {isConnected && (

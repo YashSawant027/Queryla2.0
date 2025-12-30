@@ -36,6 +36,17 @@ mongo_db_name = None
 agent_executor = None
 current_dialect = "postgresql" 
 
+# Define connection examples for user reference
+CONNECTION_EXAMPLES = {
+    "PostgreSQL": "postgres://user:password@localhost:5432/dbname",
+    "MySQL": "mysql://user:password@localhost:3306/dbname",
+    "MariaDB": "mariadb://user:password@localhost:3306/dbname",
+    "Oracle": "oracle://user:password@localhost:1521/service_name",
+    "SQL Server": "mssql://user:password@localhost:1433/dbname",
+    "MongoDB (Standard)": "mongodb://user:password@localhost:27017/dbname",
+    "MongoDB (Atlas)": "mongodb+srv://user:password@cluster0.abcde.mongodb.net/dbname?retryWrites=true&w=majority"
+}
+
 class ConnectRequest(BaseModel):
     connection_string: str
 
@@ -69,6 +80,11 @@ def health_check():
     connected = (db_instance is not None) or (mongo_client is not None)
     return {"status": "ok", "connected": connected, "dialect": current_dialect}
 
+@app.get("/examples")
+def get_connection_examples():
+    """Returns example connection strings for supported databases."""
+    return CONNECTION_EXAMPLES
+
 @app.post("/connect")
 async def connect_database(request: ConnectRequest):
     global db_instance, agent_executor, current_dialect, mongo_client, mongo_db_name
@@ -82,6 +98,7 @@ async def connect_database(request: ConnectRequest):
         connection_str = request.connection_string.strip()
         
         # --- MONGODB HANDLER ---
+        # This checks for BOTH standard mongodb:// and Atlas mongodb+srv://
         if connection_str.startswith("mongodb://") or connection_str.startswith("mongodb+srv://"):
             current_dialect = "mongodb"
             try:
@@ -162,7 +179,12 @@ async def connect_database(request: ConnectRequest):
         msg = str(e)
         if "No module named" in msg:
             msg += " (Make sure the required database driver is installed via pip)"
-        raise HTTPException(status_code=400, detail=f"Failed to connect: {msg}")
+        
+        # Add examples to the error message for better UX
+        examples_text = "\n".join([f"- {k}: {v}" for k, v in CONNECTION_EXAMPLES.items()])
+        detail_msg = f"Failed to connect: {msg}\n\nSupported Formats:\n{examples_text}"
+        
+        raise HTTPException(status_code=400, detail=detail_msg)
 
 @app.post("/query", response_model=QueryResponse)
 async def process_query(request: QueryRequest):
@@ -278,5 +300,6 @@ async def process_query(request: QueryRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    # DEFAULT TO PORT 8080 per user request
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+    # Use the PORT environment variable provided by Railway, or default to 8080
+    port = int(os.environ.get("PORT", 8080))
+    uvicorn.run(app, host="0.0.0.0", port=port)

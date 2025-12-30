@@ -7,6 +7,7 @@ mysql-connector-python
 oracledb
 pyodbc
 pymongo
+dnspython
 langchain
 langchain-community
 langchain-groq
