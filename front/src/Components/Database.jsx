@@ -313,7 +313,7 @@ export default function SQLAssistant() {
     addBotMessage("Thinking...");
     
     try {
-      const response = await fetch('http://localhost:8000/query', {
+      const response = await fetch('https://queryla20-production-7245.up.railway.app/query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: query })
