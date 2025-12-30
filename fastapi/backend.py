@@ -22,7 +22,10 @@ app = FastAPI(title="Universal Text-to-SQL/NoSQL API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://yashsawant027.github.io", # No path, no trailing slash
+        "http://localhost:5173"            # No path, no trailing slash
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
