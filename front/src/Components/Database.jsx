@@ -16,86 +16,50 @@ import {
   Sparkles,
   Menu,
   X,
-  ChevronDown, // Added for collapsible panel
-  ChevronUp    // Added for collapsible panel
+  ChevronDown, 
+  ChevronUp,
+  Settings,
+  Laptop,
+  Cloud,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
-// --- HELPER COMPONENTS ---
+// --- CONFIGURATION ---
+const API_BASE_URL = "https://queryla20-production-7245.up.railway.app"; 
+
+// --- HELPER COMPONENTS (Charts & Table) ---
+// (Keeping these the same as they work well)
 
 const SimpleLineChart = ({ data, labelKey, valueKey, color = "#8884d8" }) => {
   if (!data || data.length === 0) return <div className="text-gray-400 p-4">No data to chart</div>;
-  
   const values = data.map(d => Number(d[valueKey]) || 0);
   const max = Math.max(...values);
   const min = 0; 
   const range = max - min || 1;
-
-  // Use percentages for X positioning to align SVG and HTML elements
-  const getX = (index) => {
-      if (data.length <= 1) return 50;
-      return (index / (data.length - 1)) * 100;
-  };
-  
-  // Y is inverted (100% is 0 value, 0% is max value)
-  const getY = (val) => {
-      const normalized = (val - min) / range;
-      return 100 - (normalized * 100); 
-  };
-
+  const getX = (index) => data.length <= 1 ? 50 : (index / (data.length - 1)) * 100;
+  const getY = (val) => 100 - (((val - min) / range) * 100); 
   const points = data.map((d, i) => `${getX(i)},${getY(Number(d[valueKey]) || 0)}`).join(' ');
-
-  // Calculate unique tick values for Y-axis to avoid duplicates
   let ticks = [0, 0.25, 0.5, 0.75, 1].map(pct => Math.round(min + (range * pct)));
   ticks = [...new Set(ticks)].sort((a, b) => b - a);
 
   return (
     <div className="w-full h-64 sm:h-72 p-2 sm:p-4 border rounded bg-white flex flex-col font-sans">
        <div className="flex flex-1 min-h-0 relative">
-           {/* Y Axis Labels */}
            <div className="flex flex-col justify-between text-[8px] sm:text-[10px] text-[#666] pr-2 select-none h-full py-1">
-              {ticks.map((tick, i) => (
-                 <span key={i} className="leading-none text-right w-6 sm:w-8">{tick}</span>
-              ))}
+              {ticks.map((tick, i) => <span key={i} className="leading-none text-right w-6 sm:w-8">{tick}</span>)}
            </div>
-
-           {/* Chart Area */}
            <div className="flex-1 relative">
               <svg className="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 100 100">
-                {/* Horizontal Grid Lines */}
                 {ticks.map((tick) => {
                    const yPos = getY(tick);
-                   return (
-                     <line key={tick} x1="0" y1={yPos} x2="100" y2={yPos} stroke="#ccc" strokeWidth="1" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />
-                   );
+                   return <line key={tick} x1="0" y1={yPos} x2="100" y2={yPos} stroke="#ccc" strokeWidth="1" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />;
                 })}
-                
-                {/* Line */}
-                <polyline 
-                  points={points}
-                  fill="none"
-                  stroke={color}
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  vectorEffect="non-scaling-stroke"
-                />
+                <polyline points={points} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
               </svg>
-
-              {/* Data Points */}
               <div className="absolute inset-0 pointer-events-none">
                  {data.map((d, i) => (
-                   <div 
-                     key={i}
-                     className="absolute bg-white border border-solid rounded-full transform -translate-x-1/2 -translate-y-1/2 shadow-sm pointer-events-auto cursor-pointer group"
-                     style={{ 
-                       left: `${getX(i)}%`, 
-                       top: `${getY(Number(d[valueKey]) || 0)}%`,
-                       borderColor: color,
-                       width: '6px',
-                       height: '6px',
-                       borderWidth: '1.5px'
-                     }}
-                   >
+                   <div key={i} className="absolute bg-white border border-solid rounded-full transform -translate-x-1/2 -translate-y-1/2 shadow-sm pointer-events-auto cursor-pointer group" style={{ left: `${getX(i)}%`, top: `${getY(Number(d[valueKey]) || 0)}%`, borderColor: color, width: '6px', height: '6px', borderWidth: '1.5px' }}>
                       <div className="opacity-0 group-hover:opacity-100 absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-white border border-gray-200 text-gray-600 text-[10px] px-2 py-1 rounded shadow-sm whitespace-nowrap z-20 pointer-events-none transition-opacity duration-200">
                           <span className="font-bold text-[#8884d8]">{d[labelKey]}:</span> {d[valueKey]}
                        </div>
@@ -104,17 +68,9 @@ const SimpleLineChart = ({ data, labelKey, valueKey, color = "#8884d8" }) => {
               </div>
            </div>
        </div>
-
-       {/* X Axis Labels */}
        <div className="flex relative h-6 mt-2 ml-8 sm:ml-10 select-none">
           {data.map((d, i) => (
-             <div 
-               key={i} 
-               className="absolute text-[8px] sm:text-[10px] text-[#666] transform -translate-x-1/2 text-center w-8 sm:w-12 truncate"
-               style={{ left: `${getX(i)}%` }}
-             >
-                {d[labelKey]}
-             </div>
+             <div key={i} className="absolute text-[8px] sm:text-[10px] text-[#666] transform -translate-x-1/2 text-center w-8 sm:w-12 truncate" style={{ left: `${getX(i)}%` }}>{d[labelKey]}</div>
           ))}
        </div>
     </div>
@@ -123,16 +79,9 @@ const SimpleLineChart = ({ data, labelKey, valueKey, color = "#8884d8" }) => {
 
 const SimplePieChart = ({ data, labelKey, valueKey }) => {
   if (!data || data.length === 0) return <div className="text-gray-400 p-4">No data to chart</div>;
-
   const total = data.reduce((acc, curr) => acc + (Number(curr[valueKey]) || 0), 0);
   let cumulativePercent = 0;
-
-  const getCoordinatesForPercent = (percent) => {
-    const x = Math.cos(2 * Math.PI * percent);
-    const y = Math.sin(2 * Math.PI * percent);
-    return [x, y];
-  };
-
+  const getCoordinatesForPercent = (percent) => [Math.cos(2 * Math.PI * percent), Math.sin(2 * Math.PI * percent)];
   const colors = ['#8884d8', '#83a6ed', '#8dd1e1', '#82ca9d', '#a4de6c', '#d0ed57', '#ffc658', '#8884d8'];
 
   return (
@@ -146,25 +95,8 @@ const SimplePieChart = ({ data, labelKey, valueKey }) => {
             cumulativePercent += percent;
             const end = getCoordinatesForPercent(cumulativePercent);
             const largeArcFlag = percent > 0.5 ? 1 : 0;
-            const pathData = [
-              `M 0 0`,
-              `L ${start[0]} ${start[1]}`,
-              `A 1 1 0 ${largeArcFlag} 1 ${end[0]} ${end[1]}`,
-              `Z`
-            ].join(' ');
-
-            return (
-              <path 
-                key={i} 
-                d={pathData} 
-                fill={colors[i % colors.length]} 
-                stroke="white" 
-                strokeWidth="0.02"
-                className="hover:opacity-80 transition-opacity cursor-pointer"
-              >
-                <title>{slice[labelKey]}: {value} ({Math.round(percent * 100)}%)</title>
-              </path>
-            );
+            const pathData = [`M 0 0`, `L ${start[0]} ${start[1]}`, `A 1 1 0 ${largeArcFlag} 1 ${end[0]} ${end[1]}`, `Z`].join(' ');
+            return <path key={i} d={pathData} fill={colors[i % colors.length]} stroke="white" strokeWidth="0.02" className="hover:opacity-80 transition-opacity cursor-pointer"><title>{slice[labelKey]}: {value} ({Math.round(percent * 100)}%)</title></path>;
           })}
         </svg>
       </div>
@@ -202,7 +134,6 @@ const DataTable = ({ data }) => {
   );
 };
 
-// --- CHART CONTAINER COMPONENT ---
 const ChartContainer = ({ data, config }) => {
   const defaultType = config.type === 'bar' ? 'pie' : (config.type || 'pie');
   const [chartType, setChartType] = useState(defaultType);
@@ -226,12 +157,10 @@ const ChartContainer = ({ data, config }) => {
           </button>
         </div>
       </div>
-
       <div className="p-4 border-b border-slate-100">
         {activeType === 'line' && <SimpleLineChart data={data} labelKey={config.labelKey} valueKey={config.valueKey} color="#8884d8" />}
         {activeType === 'pie' && <SimplePieChart data={data} labelKey={config.labelKey} valueKey={config.valueKey} />}
       </div>
-
       <div className="p-4 max-h-60 overflow-y-auto">
         <h4 className="text-xs font-bold text-slate-500 uppercase mb-2">Source Data</h4>
         <DataTable data={data} />
@@ -240,29 +169,208 @@ const ChartContainer = ({ data, config }) => {
   );
 };
 
+// --- NEW COMPONENT: CONNECTION FORM ---
+const ConnectionForm = ({ onConnect, isConnecting, isConnected, onDisconnect }) => {
+  const [dbType, setDbType] = useState('postgresql');
+  const [formData, setFormData] = useState({
+    host: '',
+    port: '5432',
+    database: '',
+    username: '',
+    password: '',
+    service: '' // For Oracle
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [rawString, setRawString] = useState('');
+  const [useRaw, setUseRaw] = useState(false);
+
+  // Update default port when DB type changes
+  useEffect(() => {
+    const ports = {
+      postgresql: '5432',
+      mysql: '3306',
+      mongodb: '27017',
+      oracle: '1521',
+      mssql: '1433'
+    };
+    setFormData(prev => ({ ...prev, port: ports[dbType] || '' }));
+  }, [dbType]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const generateConnectionString = () => {
+    const { host, port, database, username, password, service } = formData;
+    const userPass = username ? `${username}:${password}@` : '';
+    
+    switch (dbType) {
+      case 'postgresql':
+        return `postgresql://${userPass}${host}:${port}/${database}`;
+      case 'mysql':
+        return `mysql://${userPass}${host}:${port}/${database}`;
+      case 'mongodb':
+        return `mongodb://${userPass}${host}:${port}/${database}?authSource=admin`; // Common default
+      case 'oracle':
+        return `oracle://${userPass}${host}:${port}/${service}`;
+      case 'mssql':
+        return `mssql://${userPass}${host}:${port}/${database}`;
+      default:
+        return '';
+    }
+  };
+
+  const finalConnectionString = useRaw ? rawString : generateConnectionString();
+
+  const handleSubmit = () => {
+    onConnect(finalConnectionString);
+  };
+
+  if (isConnected) {
+    return (
+      <div className="space-y-4">
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex flex-col items-center gap-2">
+          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600">
+            <CheckCircle2 className="w-6 h-6" />
+          </div>
+          <div className="text-center">
+            <h3 className="font-semibold text-green-800">Connected Successfully</h3>
+            <p className="text-xs text-green-600 mt-1 break-all px-2 opacity-80">
+              {finalConnectionString.replace(/:[^:]*@/, ':****@')} 
+            </p>
+          </div>
+        </div>
+        <button 
+          onClick={onDisconnect}
+          className="w-full py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors"
+        >
+          Disconnect
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Mode Toggle */}
+      <div className="flex justify-end">
+        <button 
+          onClick={() => setUseRaw(!useRaw)}
+          className="text-[10px] text-indigo-600 hover:underline font-medium"
+        >
+          {useRaw ? "Use Form Wizard" : "Enter Raw Connection String"}
+        </button>
+      </div>
+
+      {useRaw ? (
+        <div>
+          <label className="text-xs font-medium text-slate-500 mb-1 block">Connection String</label>
+          <input 
+            type="text" 
+            value={rawString}
+            onChange={(e) => setRawString(e.target.value)}
+            placeholder="postgresql://user:pass@host:5432/db"
+            className="w-full text-xs p-2 border border-slate-300 rounded bg-slate-50 font-mono focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+          />
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {/* DB Selector */}
+          <div>
+            <label className="text-xs font-medium text-slate-500 mb-1 block">Database Type</label>
+            <select 
+              value={dbType} 
+              onChange={(e) => setDbType(e.target.value)}
+              className="w-full text-sm p-2 border border-slate-300 rounded bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            >
+              <option value="postgresql">PostgreSQL</option>
+              <option value="mysql">MySQL</option>
+              <option value="mongodb">MongoDB</option>
+              <option value="oracle">Oracle</option>
+              <option value="mssql">SQL Server</option>
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[10px] font-medium text-slate-500 mb-1 block">Host</label>
+              <input name="host" value={formData.host} onChange={handleChange} placeholder="localhost" className="w-full text-xs p-2 border border-slate-300 rounded focus:outline-none focus:border-indigo-500" />
+            </div>
+            <div>
+              <label className="text-[10px] font-medium text-slate-500 mb-1 block">Port</label>
+              <input name="port" value={formData.port} onChange={handleChange} placeholder="5432" className="w-full text-xs p-2 border border-slate-300 rounded focus:outline-none focus:border-indigo-500" />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[10px] font-medium text-slate-500 mb-1 block">{dbType === 'oracle' ? 'Service Name / SID' : 'Database Name'}</label>
+            <input name={dbType === 'oracle' ? 'service' : 'database'} value={dbType === 'oracle' ? formData.service : formData.database} onChange={handleChange} placeholder="mydb" className="w-full text-xs p-2 border border-slate-300 rounded focus:outline-none focus:border-indigo-500" />
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[10px] font-medium text-slate-500 mb-1 block">Username</label>
+              <input name="username" value={formData.username} onChange={handleChange} placeholder="user" className="w-full text-xs p-2 border border-slate-300 rounded focus:outline-none focus:border-indigo-500" />
+            </div>
+            <div className="relative">
+              <label className="text-[10px] font-medium text-slate-500 mb-1 block">Password</label>
+              <input 
+                type={showPassword ? "text" : "password"} 
+                name="password" 
+                value={formData.password} 
+                onChange={handleChange} 
+                placeholder="****" 
+                className="w-full text-xs p-2 border border-slate-300 rounded focus:outline-none focus:border-indigo-500 pr-7" 
+              />
+              <button 
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-2 top-[22px] text-slate-400 hover:text-slate-600"
+              >
+                {showPassword ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+              </button>
+            </div>
+          </div>
+          
+          {/* Preview */}
+          <div className="bg-slate-100 p-2 rounded text-[10px] text-slate-500 break-all font-mono">
+            {generateConnectionString() || "Complete the form..."}
+          </div>
+        </div>
+      )}
+
+      <button 
+        onClick={handleSubmit}
+        disabled={isConnecting}
+        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-2.5 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 mt-4"
+      >
+        {isConnecting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+        {isConnecting ? "Connecting..." : "Connect Database"}
+      </button>
+    </div>
+  );
+};
+
+// --- MAIN APP COMPONENT ---
+
 export default function SQLAssistant() {
-  const [connectionString, setConnectionString] = useState("");
+  const [apiBaseUrl, setApiBaseUrl] = useState("https://queryla20-production-7245.up.railway.app");
+  const [showSettings, setShowSettings] = useState(false);
+  
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [dbTables, setDbTables] = useState([]);
   const [input, setInput] = useState("");
-  const [isConnectionExpanded, setIsConnectionExpanded] = useState(true); // Default open
+  const [isConnectionExpanded, setIsConnectionExpanded] = useState(true); 
   const [messages, setMessages] = useState([
     { 
       id: 1, 
       type: 'bot', 
-      text: "Hello! I am ready to connect to your Database (Postgres, MySQL, MongoDB, Oracle). Enter your connection string above to begin." 
+      text: "Hello! I am ready to connect to your Database. Fill in the connection details above to begin." 
     }
   ]);
   const messagesEndRef = useRef(null);
-
-  const demoConnectionStrings = [
-    { label: "PostgreSQL", value: "postgresql://postgres:[PASSWORD]@db.[PROJECT].supabase.co:5432/postgres" },
-    { label: "MySQL", value: "mysql://rfamro:4@mysql-rfam-public.ebi.ac.uk:4497/Rfam" },
-    { label: "MongoDB", value: "mongodb+srv://[USER]:[PASSWORD]@[CLUSTER].mongodb.net/test?retryWrites=true&w=majority" },
-    { label: "Oracle", value: "oracle://[USER]:[PASSWORD]@[HOST]:1522/[SERVICE_NAME]" },
-    { label: "SQL Server", value: "mssql://[USER]:[PASSWORD]@[SERVER].database.windows.net:1433/[DBNAME]" },
-  ];
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -278,13 +386,13 @@ export default function SQLAssistant() {
     setMessages(prev => [...prev, { id: generateId(), type: 'user', text }]);
   };
 
-  const handleConnect = async () => {
+  const handleConnect = async (connString) => {
     setIsConnecting(true);
     try {
-      const response = await fetch('http://localhost:8000/connect', {
+      const response = await fetch(`${apiBaseUrl}/connect`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ connection_string: connectionString })
+        body: JSON.stringify({ connection_string: connString })
       });
       
       const result = await response.json();
@@ -295,25 +403,30 @@ export default function SQLAssistant() {
 
       setIsConnected(true);
       setDbTables(result.tables || []);
-      addBotMessage(result.message || "Connected successfully!");
-      // Automatically collapse on successful connect for better mobile UX
+      addBotMessage(result.message || "Connected successfully! You can now ask questions about your data.");
       if (window.innerWidth < 768) {
         setIsConnectionExpanded(false);
       }
       
     } catch (error) {
       console.error("Connection failed", error);
-      addBotMessage(`Error: ${error.message}. Make sure the backend is running and the string is correct.`);
+      addBotMessage(`Error: ${error.message}. Make sure the backend is running and the credentials are correct.`);
     } finally {
       setIsConnecting(false);
     }
+  };
+
+  const handleDisconnect = () => {
+    setIsConnected(false);
+    setDbTables([]);
+    addBotMessage("Disconnected. Connect to another database to continue.");
   };
 
   const processQuery = async (query) => {
     addBotMessage("Thinking...");
     
     try {
-      const response = await fetch('https://queryla20-production-7245.up.railway.app/query', {
+      const response = await fetch(`${apiBaseUrl}/query`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: query })
@@ -399,8 +512,9 @@ export default function SQLAssistant() {
     if (!input.trim()) return;
     if (!isConnected) {
       addBotMessage("Please connect to your database first.");
-      // Open panel if trying to query without connection
-      setIsConnectionExpanded(true);
+      if (window.innerWidth < 768) {
+        setIsConnectionExpanded(true);
+      }
       return;
     }
     addUserMessage(input);
@@ -410,101 +524,73 @@ export default function SQLAssistant() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-[90vh] mt-18 w-full bg-slate-50 text-slate-900 font-sans overflow-hidden">
+    <div className="flex flex-col md:flex-row h-screen w-full bg-slate-50 text-slate-900 font-sans overflow-hidden">
       
       {/* CONNECTION PANEL */}
       <div className={`
         w-full md:w-80 bg-white border-b md:border-b-0 md:border-r border-slate-200 flex flex-col shadow-sm z-20 flex-shrink-0 transition-all duration-300 ease-in-out
-        ${isConnectionExpanded ? 'h-[50vh] md:h-full' : 'h-14 md:h-full'}
+        ${isConnectionExpanded ? 'h-[60vh] md:h-full' : 'h-14 md:h-full'}
       `}>
         <div 
           className="p-4 md:p-5 border-b border-slate-100 flex items-center justify-between cursor-pointer md:cursor-default"
           onClick={() => {
-            // Only toggle on mobile (when not md)
             if (window.innerWidth < 768) {
               setIsConnectionExpanded(!isConnectionExpanded);
             }
           }}
         >
           <div className="flex items-center gap-2 text-indigo-600 font-bold text-xl">
-            <h3 className="text-sm font-semibold text-slate-700  flex items-center gap-2">
-              <Server className="w-4 h-4" /> Connection
-            </h3>
+            <Database className="w-6 h-6" />
+            <span>DataLingo AI</span>
           </div>
           
-          {/* Mobile Toggle Button */}
-          <button className="md:hidden text-slate-400 hover:text-indigo-600 transition-colors p-1">
-            {isConnectionExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-          </button>
+          <div className="flex items-center gap-2">
+             <div className="relative">
+                <button 
+                  onClick={(e) => { e.stopPropagation(); setShowSettings(!showSettings); }}
+                  className="p-1 text-slate-400 hover:text-indigo-600 transition-colors"
+                  title="Server Settings"
+                >
+                  <Settings className="w-5 h-5" />
+                </button>
+                {showSettings && (
+                  <div className="absolute top-8 right-0 w-48 bg-white border border-slate-200 rounded-lg shadow-lg p-2 z-50">
+                    <p className="text-[10px] text-slate-400 font-bold mb-2 px-2 uppercase">Backend Server</p>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); setApiBaseUrl("https://queryla20-production-7245.up.railway.app"); setShowSettings(false); }}
+                      className={`w-full flex items-center gap-2 px-2 py-1.5 text-xs rounded mb-1 ${apiBaseUrl.includes('railway') ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-slate-50 text-slate-600'}`}
+                    >
+                      <Cloud className="w-3 h-3" /> Cloud (Railway)
+                    </button>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); setApiBaseUrl("http://localhost:8000"); setShowSettings(false); }}
+                      className={`w-full flex items-center gap-2 px-2 py-1.5 text-xs rounded ${apiBaseUrl.includes('localhost') ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-slate-50 text-slate-600'}`}
+                    >
+                      <Laptop className="w-3 h-3" /> Local (Port 8000)
+                    </button>
+                  </div>
+                )}
+             </div>
+             <button className="md:hidden text-slate-400 hover:text-indigo-600 transition-colors p-1">
+               {isConnectionExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+             </button>
+          </div>
         </div>
         
-        {/* Connection Content - Hidden when collapsed on mobile */}
+        {/* Connection Content */}
         <div className={`
           flex-1 overflow-y-auto p-4 md:p-5
           ${isConnectionExpanded ? 'block' : 'hidden md:block'}
         `}>
-          <div className="mb-6">
-            
-            
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs font-medium text-slate-500 mb-1 block">Connection String</label>
-                <input 
-                  type="text" 
-                  value={connectionString}
-                  onChange={(e) => setConnectionString(e.target.value)}
-                  disabled={isConnected}
-                  placeholder="postgres://..., mysql://..., mongodb://..."
-                  className="w-full text-xs p-2 border border-slate-300 rounded bg-slate-50 font-mono text-slate-600 focus:ring-2 focus:ring-indigo-500 focus:outline-none break-all"
-                />
-                
-                {/* Demo Chips */}
-                <div className="mt-3">
-                  <p className="text-[10px] font-semibold text-slate-400 mb-2 uppercase">Quick Test Strings</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {demoConnectionStrings.map((demo) => (
-                      <button
-                        key={demo.label}
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault(); 
-                          setConnectionString(demo.value);
-                        }}
-                        disabled={isConnected}
-                        className="px-2 py-1 text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-600 rounded border border-slate-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        title={`Use ${demo.label} connection string`}
-                      >
-                        {demo.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <p className="text-[10px] text-slate-400 mt-2 leading-relaxed">
-                  Supports PostgreSQL, MySQL, MongoDB, Oracle
-                </p>
-              </div>
-
-              {!isConnected ? (
-                <button 
-                  onClick={handleConnect}
-                  disabled={isConnecting}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-2 rounded font-medium transition-colors flex items-center justify-center gap-2"
-                >
-                  {isConnecting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-                  {isConnecting ? "Connect to DB" : "Connect"}
-                </button>
-              ) : (
-                <div className="flex items-center justify-between bg-green-50 text-green-700 p-2 rounded border border-green-200 text-sm">
-                  <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Connected</span>
-                  <button onClick={() => setIsConnected(false)} className="text-xs underline">Disconnect</button>
-                </div>
-              )}
-            </div>
-          </div>
+          <ConnectionForm 
+            onConnect={handleConnect} 
+            isConnecting={isConnecting}
+            isConnected={isConnected}
+            onDisconnect={handleDisconnect}
+          />
 
           {isConnected && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="mt-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <h3 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
                 <TableIcon className="w-4 h-4" /> Tables Found
               </h3>
@@ -572,7 +658,6 @@ export default function SQLAssistant() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Area */}
         <div className="p-3 sm:p-4 bg-white border-t border-slate-200 flex-none">
           <form onSubmit={handleSubmit} className="relative max-w-4xl mx-auto">
             <input

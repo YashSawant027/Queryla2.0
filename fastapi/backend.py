@@ -20,12 +20,10 @@ load_dotenv()
 
 app = FastAPI(title="Universal Text-to-SQL/NoSQL API")
 
+# Allow all origins for local testing/generic deployment
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://yashsawant027.github.io", # No path, no trailing slash
-        "http://localhost:5173"            # No path, no trailing slash
-    ],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -112,7 +110,9 @@ async def connect_database(request: ConnectRequest):
             except Exception as e:
                 raise HTTPException(status_code=400, detail=f"MongoDB Connection Failed: {str(e)}")
 
-        # --- SQL HANDLER ---
+        # --- SQL HANDLER (Driver Injection) ---
+        # SQLAlchemy needs specific drivers (e.g. +psycopg2) which user might omit
+        
         # PostgreSQL
         if connection_str.startswith("postgres://"):
             connection_str = connection_str.replace("postgres://", "postgresql+psycopg2://", 1)
