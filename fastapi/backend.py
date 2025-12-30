@@ -75,6 +75,78 @@ def get_mongo_schema(client, db_name):
             schema_info.append(f"Collection: '{collection_name}'\nSample Document: {doc_str}")
     return "\n\n".join(schema_info)
 
+# Helper to handle non-serializable objects (dates, decimals) for LLM context
+def json_serial(obj):
+    if isinstance(obj, (datetime.date, datetime.datetime)):
+        return obj.isoformat()
+    if isinstance(obj, Decimal):
+        return float(obj)
+    return str(obj)
+
+async def generate_chart_config_ai(user_question: str, data: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    """
+    Uses the LLM to intelligently decide the best chart configuration based on the User's Question 
+    and the actual Data Schema returned.
+    """
+    if not data or len(data) == 0:
+        return None
+    
+    # We send the columns and the first row to the AI so it knows the data shape
+    # We avoid sending all data to save tokens and privacy
+    data_sample = {
+        "columns": list(data[0].keys()),
+        "first_row_sample": data[0]
+    }
+    
+    try:
+        llm = ChatGroq(temperature=0, model_name="llama-3.1-8b-instant")
+        
+        prompt = f"""
+        You are a Data Visualization Expert.
+        
+        User Question: "{user_question}"
+        Data Schema/Sample: {json.dumps(data_sample, default=json_serial)}
+        
+        Task: 
+        Recommend the best chart type (bar, line, pie) to visualize this data based on the user's intent and the data type.
+        
+        Rules:
+        1. If the user asks for a trend, over time, or timeline -> Use "line".
+        2. If the user asks for distribution, proportion, or breakdown -> Use "pie" (only if <= 8 data points).
+        3. If comparing values across categories -> Use "bar".
+        4. IGNORE ID columns (like 'id', 'user_id', '_id') for the value axis unless it's a COUNT.
+        5. Return 'null' if no chart is appropriate (e.g. single number result, text list).
+        
+        Output JSON Format:
+        {{
+            "type": "bar" | "line" | "pie",
+            "labelKey": "key_for_x_axis_or_labels",
+            "valueKey": "key_for_y_axis_or_values",
+            "color": "#8884d8"
+        }}
+        
+        Return ONLY valid JSON. No markdown.
+        """
+        
+        response = llm.invoke(prompt)
+        content = response.content.strip().replace("```json", "").replace("```", "")
+        
+        if content.lower() == "null":
+            return None
+            
+        config = json.loads(content)
+        
+        # Validate that keys actually exist in data
+        first_row_keys = data[0].keys()
+        if config["labelKey"] not in first_row_keys or config["valueKey"] not in first_row_keys:
+            return None # Fallback if AI hallucinates a key
+            
+        return config
+        
+    except Exception as e:
+        print(f"AI Chart Config Error: {e}")
+        return None # Fail gracefully to no chart
+
 @app.get("/health")
 def health_check():
     connected = (db_instance is not None) or (mongo_client is not None)
@@ -197,6 +269,9 @@ async def process_query(request: QueryRequest):
         # Initialize LLM
         llm = ChatGroq(temperature=0, model_name="llama-3.1-8b-instant")
 
+        sql_query = ""
+        data = []
+
         # --- MONGODB QUERY PATH ---
         if current_dialect == "mongodb":
             schema_context = get_mongo_schema(mongo_client, mongo_db_name)
@@ -233,25 +308,17 @@ async def process_query(request: QueryRequest):
                 query_spec = json.loads(result_str)
                 collection_name = query_spec["collection"]
                 pipeline = query_spec["pipeline"]
+                sql_query = json.dumps(query_spec, indent=2) # Display format
                 
                 # Execute Mongo Query
                 db = mongo_client[mongo_db_name]
                 cursor = db[collection_name].aggregate(pipeline)
                 
                 # Convert BSON results to JSON-serializable list
-                data = []
                 for doc in cursor:
-                    # Convert _id to string if it exists
                     if '_id' in doc:
                         doc['_id'] = str(doc['_id'])
                     data.append(doc)
-                    
-                return QueryResponse(
-                    answer="MongoDB aggregation executed successfully.",
-                    sql_query=json.dumps(query_spec, indent=2), # Show the pipeline as "SQL"
-                    data=data,
-                    chart_config=None # Let frontend handle charting
-                )
                 
             except json.JSONDecodeError:
                 raise HTTPException(status_code=500, detail="AI generated invalid JSON for MongoDB query.")
@@ -278,7 +345,6 @@ async def process_query(request: QueryRequest):
             response = llm.invoke(prompt)
             sql_query = response.content.strip().replace("```sql", "").replace("```", "")
             
-            data = []
             with db_instance._engine.connect() as connection:
                 result_proxy = connection.execute(text(sql_query))
                 if result_proxy.returns_rows:
@@ -287,12 +353,16 @@ async def process_query(request: QueryRequest):
                 else:
                     data = [{"status": "Query executed successfully, no rows returned"}]
 
-            return QueryResponse(
-                answer="Query executed successfully.",
-                sql_query=sql_query,
-                data=data,
-                chart_config=None
-            )
+        # --- GENERATE SMART CHART CONFIG ---
+        # Now we use the AI to decide the chart type based on the user's intent + actual data
+        chart_config = await generate_chart_config_ai(request.text, data)
+
+        return QueryResponse(
+            answer="Query executed successfully.",
+            sql_query=sql_query,
+            data=data,
+            chart_config=chart_config
+        )
 
     except Exception as e:
         print(f"Query Error: {e}")
