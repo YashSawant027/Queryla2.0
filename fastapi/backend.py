@@ -278,6 +278,5 @@ async def process_query(request: QueryRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    # Use the PORT environment variable provided by Railway, or default to 8080
-    port = int(os.environ.get("PORT", 8080))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    # DEFAULT TO PORT 8080 per user request
+    uvicorn.run(app, host="0.0.0.0", port=8080)

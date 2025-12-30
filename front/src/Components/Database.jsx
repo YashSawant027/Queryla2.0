@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 
 // --- CONFIGURATION ---
-const API_BASE_URL = "[https://queryla20-production-7245.up.railway.app](https://queryla20-production-7245.up.railway.app)"; 
+const API_BASE_URL = "https://queryla20-production-7245.up.railway.app"; 
 
 // --- HELPER COMPONENTS (Charts & Table) ---
 
@@ -354,7 +354,7 @@ const ConnectionForm = ({ onConnect, isConnecting, isConnected, onDisconnect }) 
 // --- MAIN APP COMPONENT ---
 
 export default function SQLAssistant() {
-  const [apiBaseUrl, setApiBaseUrl] = useState(API_BASE_URL);
+  const [apiBaseUrl, setApiBaseUrl] = useState("https://queryla20-production-7245.up.railway.app");
   const [showSettings, setShowSettings] = useState(false);
   
   const [isConnected, setIsConnected] = useState(false);
@@ -538,7 +538,7 @@ export default function SQLAssistant() {
             }
           }}
         >
-          <div className="flex items-center gap-2  font-bold text-xl">
+          <div className="flex items-center gap-2 font-bold text-xl">
             <Database className="w-6 h-6" />
             <span>Connection</span>
           </div>
@@ -556,7 +556,7 @@ export default function SQLAssistant() {
                   <div className="absolute top-8 right-0 w-48 bg-white border border-slate-200 rounded-lg shadow-lg p-2 z-50">
                     <p className="text-[10px] text-slate-400 font-bold mb-2 px-2 uppercase">Backend Server</p>
                     <button 
-                      onClick={(e) => { e.stopPropagation(); setApiBaseUrl("[https://queryla20-production-7245.up.railway.app](https://queryla20-production-7245.up.railway.app)"); setShowSettings(false); }}
+                      onClick={(e) => { e.stopPropagation(); setApiBaseUrl("https://queryla20-production-7245.up.railway.app"); setShowSettings(false); }}
                       className={`w-full flex items-center gap-2 px-2 py-1.5 text-xs rounded mb-1 ${apiBaseUrl.includes('railway') ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-slate-50 text-slate-600'}`}
                     >
                       <Cloud className="w-3 h-3" /> Cloud (Railway)
