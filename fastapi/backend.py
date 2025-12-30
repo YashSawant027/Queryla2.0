@@ -111,8 +111,6 @@ async def connect_database(request: ConnectRequest):
                 raise HTTPException(status_code=400, detail=f"MongoDB Connection Failed: {str(e)}")
 
         # --- SQL HANDLER (Driver Injection) ---
-        # SQLAlchemy needs specific drivers (e.g. +psycopg2) which user might omit
-        
         # PostgreSQL
         if connection_str.startswith("postgres://"):
             connection_str = connection_str.replace("postgres://", "postgresql+psycopg2://", 1)
@@ -280,4 +278,6 @@ async def process_query(request: QueryRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # Use the PORT environment variable provided by Railway, or default to 8080
+    port = int(os.environ.get("PORT", 8080))
+    uvicorn.run(app, host="0.0.0.0", port=port)

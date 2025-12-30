@@ -26,10 +26,9 @@ import {
 } from 'lucide-react';
 
 // --- CONFIGURATION ---
-const API_BASE_URL = "https://queryla20-production-7245.up.railway.app"; 
+const API_BASE_URL = "[https://queryla20-production-7245.up.railway.app](https://queryla20-production-7245.up.railway.app)"; 
 
 // --- HELPER COMPONENTS (Charts & Table) ---
-// (Keeping these the same as they work well)
 
 const SimpleLineChart = ({ data, labelKey, valueKey, color = "#8884d8" }) => {
   if (!data || data.length === 0) return <div className="text-gray-400 p-4">No data to chart</div>;
@@ -355,7 +354,7 @@ const ConnectionForm = ({ onConnect, isConnecting, isConnected, onDisconnect }) 
 // --- MAIN APP COMPONENT ---
 
 export default function SQLAssistant() {
-  const [apiBaseUrl, setApiBaseUrl] = useState("https://queryla20-production-7245.up.railway.app");
+  const [apiBaseUrl, setApiBaseUrl] = useState(API_BASE_URL);
   const [showSettings, setShowSettings] = useState(false);
   
   const [isConnected, setIsConnected] = useState(false);
@@ -524,7 +523,7 @@ export default function SQLAssistant() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-[90vh] mt-18 w-full bg-slate-50 text-slate-900 font-sans overflow-hidden">
+    <div className="flex flex-col md:flex-row h-screen w-full bg-slate-50 text-slate-900 font-sans overflow-hidden">
       
       {/* CONNECTION PANEL */}
       <div className={`
@@ -539,9 +538,9 @@ export default function SQLAssistant() {
             }
           }}
         >
-          <div className="flex items-center gap-2 font-bold text-xl">
+          <div className="flex items-center gap-2 text-indigo-600 font-bold text-xl">
             <Database className="w-6 h-6" />
-            <span>Connection</span>
+            <span>DataLingo AI</span>
           </div>
           
           <div className="flex items-center gap-2">
@@ -557,16 +556,16 @@ export default function SQLAssistant() {
                   <div className="absolute top-8 right-0 w-48 bg-white border border-slate-200 rounded-lg shadow-lg p-2 z-50">
                     <p className="text-[10px] text-slate-400 font-bold mb-2 px-2 uppercase">Backend Server</p>
                     <button 
-                      onClick={(e) => { e.stopPropagation(); setApiBaseUrl("https://queryla20-production-7245.up.railway.app"); setShowSettings(false); }}
+                      onClick={(e) => { e.stopPropagation(); setApiBaseUrl("[https://queryla20-production-7245.up.railway.app](https://queryla20-production-7245.up.railway.app)"); setShowSettings(false); }}
                       className={`w-full flex items-center gap-2 px-2 py-1.5 text-xs rounded mb-1 ${apiBaseUrl.includes('railway') ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-slate-50 text-slate-600'}`}
                     >
                       <Cloud className="w-3 h-3" /> Cloud (Railway)
                     </button>
                     <button 
-                      onClick={(e) => { e.stopPropagation(); setApiBaseUrl("http://localhost:8000"); setShowSettings(false); }}
+                      onClick={(e) => { e.stopPropagation(); setApiBaseUrl("http://localhost:8080"); setShowSettings(false); }}
                       className={`w-full flex items-center gap-2 px-2 py-1.5 text-xs rounded ${apiBaseUrl.includes('localhost') ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-slate-50 text-slate-600'}`}
                     >
-                      <Laptop className="w-3 h-3" /> Local (Port 8000)
+                      <Laptop className="w-3 h-3" /> Local (Port 8080)
                     </button>
                   </div>
                 )}
