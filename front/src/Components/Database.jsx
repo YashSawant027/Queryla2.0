@@ -577,7 +577,7 @@ export default function SQLAssistant() {
                     >
                       <Cloud className="w-3 h-3" /> Cloud (Railway)
                     </button>
-                    <button 
+                    {/* <button 
                       onClick={(e) => { e.stopPropagation(); setApiBaseUrl("https://your-render-url.onrender.com"); setShowSettings(false); }}
                       className={`w-full flex items-center gap-2 px-2 py-1.5 text-xs rounded mb-1 ${apiBaseUrl.includes('render') ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-slate-50 text-slate-600'}`}
                     >
@@ -588,7 +588,7 @@ export default function SQLAssistant() {
                       className={`w-full flex items-center gap-2 px-2 py-1.5 text-xs rounded ${apiBaseUrl.includes('aws') ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-slate-50 text-slate-600'}`}
                     >
                       <Server className="w-3 h-3" /> Cloud (AWS)
-                    </button>
+                    </button> */}
                   </div>
                 )}
              </div>
