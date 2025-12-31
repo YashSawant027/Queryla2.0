@@ -1,5 +1,6 @@
 import os
 import json
+import re
 from typing import List, Optional, Any, Dict
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -74,6 +75,30 @@ def get_mongo_schema(client, db_name):
             doc_str = str(doc)
             schema_info.append(f"Collection: '{collection_name}'\nSample Document: {doc_str}")
     return "\n\n".join(schema_info)
+
+def extract_json_from_text(text_content: str):
+    """
+    Robustly extracts JSON object from a string that might contain other text.
+    """
+    try:
+        # 1. Try finding a code block first
+        json_match = re.search(r"```json\s*(\{.*?\})\s*```", text_content, re.DOTALL)
+        if json_match:
+            return json.loads(json_match.group(1))
+            
+        # 2. Try finding just the JSON object structure
+        # Matches the first opening brace { and the last closing brace }
+        json_match = re.search(r"(\{.*\})", text_content, re.DOTALL)
+        if json_match:
+            return json.loads(json_match.group(1))
+            
+        # 3. Fallback: try parsing the whole string
+        return json.loads(text_content.strip())
+        
+    except json.JSONDecodeError as e:
+        print(f"Failed to parse JSON: {e}")
+        print(f"Content was: {text_content}")
+        return None
 
 # Helper to handle non-serializable objects (dates, decimals) for LLM context
 def json_serial(obj):
@@ -177,16 +202,14 @@ async def generate_chart_config_ai(user_question: str, data: List[Dict[str, Any]
         """
         
         response = llm.invoke(prompt)
-        content = response.content.strip().replace("```json", "").replace("```", "")
+        config = extract_json_from_text(response.content)
         
-        if content.lower() == "null":
+        if not config:
             return None
             
-        config = json.loads(content)
-        
         # Validate keys
         first_row_keys = data[0].keys()
-        if config["labelKey"] not in first_row_keys or config["valueKey"] not in first_row_keys:
+        if config.get("labelKey") not in first_row_keys or config.get("valueKey") not in first_row_keys:
             return None 
             
         return config
@@ -202,6 +225,7 @@ def health_check():
 
 @app.get("/examples")
 def get_connection_examples():
+    """Returns example connection strings for supported databases."""
     return CONNECTION_EXAMPLES
 
 @app.post("/connect")
@@ -225,14 +249,17 @@ async def connect_database(request: ConnectRequest):
             current_dialect = "mongodb"
             try:
                 mongo_client = MongoClient(connection_str)
+                # Quick check
                 mongo_client.admin.command('ping')
                 
+                # Extract DB name from connection string or default
                 try:
                     mongo_db_name = pymongo.uri_parser.parse_uri(connection_str)['database']
                 except:
                     mongo_db_name = None
                 
                 if not mongo_db_name:
+                    # Fallback: use the first non-admin/local db
                     dbs = mongo_client.list_database_names()
                     mongo_db_name = next((db for db in dbs if db not in ['admin', 'local', 'config']), 'test')
 
@@ -302,6 +329,7 @@ async def process_query(request: QueryRequest):
         raise HTTPException(status_code=400, detail="Database not connected. Please call /connect first.")
     
     try:
+        # Initialize LLM
         llm = ChatGroq(temperature=0, model_name="llama-3.1-8b-instant")
         sql_query = ""
         data = []
@@ -319,20 +347,30 @@ async def process_query(request: QueryRequest):
             
             Task:
             1. Construct a MongoDB Aggregation Pipeline to answer the question.
-            2. Return ONLY a valid JSON object.
+            2. Return ONLY a valid JSON object with two keys: 
+               - "collection": name of the collection to query
+               - "pipeline": the aggregation pipeline list (array of objects)
             
             Example Output Format:
             {{
                 "collection": "sales",
-                "pipeline": [ ... ]
+                "pipeline": [
+                    {{"$match": {{"status": "completed"}}}},
+                    {{"$group": {{"_id": "$product", "total": {{"$sum": "$amount"}}}}}}
+                ]
             }}
+            
+            Do not include markdown formatting (like ```json). Return raw JSON only.
             """
             
             response = llm.invoke(prompt)
-            result_str = response.content.strip().replace("```json", "").replace("```", "")
+            # Safe extraction
+            query_spec = extract_json_from_text(response.content)
             
+            if not query_spec:
+                raise ValueError("Could not parse JSON from AI response")
+
             try:
-                query_spec = json.loads(result_str)
                 collection_name = query_spec["collection"]
                 pipeline = query_spec["pipeline"]
                 sql_query = json.dumps(query_spec, indent=2) 
@@ -397,5 +435,6 @@ async def process_query(request: QueryRequest):
 
 if __name__ == "__main__":
     import uvicorn
+    # Use the PORT environment variable provided by Railway, or default to 8080
     port = int(os.environ.get("PORT", 8080))
     uvicorn.run(app, host="0.0.0.0", port=port)

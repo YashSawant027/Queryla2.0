@@ -311,7 +311,6 @@ const ConnectionForm = ({ onConnect, isConnecting, isConnected, onDisconnect, cu
               <option value="postgresql">PostgreSQL</option>
               <option value="mysql">MySQL</option>
               <option value="mariadb">MariaDB</option>
-              <option value="mongodb">MongoDB (Local/Standard)</option>
               <option value="mongodb-atlas">MongoDB (Atlas Cloud)</option>
               <option value="oracle">Oracle</option>
             </select>
