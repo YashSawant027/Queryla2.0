@@ -26,10 +26,8 @@ import {
   Globe
 } from 'lucide-react';
 
-// --- CONFIGURATION ---
 const API_BASE_URL = "https://queryla20-production-7245.up.railway.app"; 
 
-// --- HELPER COMPONENTS (Charts & Table) ---
 
 const SimpleLineChart = ({ data, labelKey, valueKey, color = "#8884d8" }) => {
   if (!data || data.length === 0) return <div className="text-gray-400 p-4">No data to chart</div>;
@@ -198,7 +196,6 @@ const ChartContainer = ({ data, config }) => {
   );
 };
 
-// --- COMPONENT: CONNECTION FORM ---
 const ConnectionForm = ({ onConnect, isConnecting, isConnected, onDisconnect, currentBackendUrl }) => {
   const [dbType, setDbType] = useState('postgresql');
   const [formData, setFormData] = useState({
@@ -207,13 +204,12 @@ const ConnectionForm = ({ onConnect, isConnecting, isConnected, onDisconnect, cu
     database: '',
     username: '',
     password: '',
-    service: '' // For Oracle
+    service: '' 
   });
   const [showPassword, setShowPassword] = useState(false);
   const [rawString, setRawString] = useState('');
   const [useRaw, setUseRaw] = useState(false);
 
-  // Check for configuration mismatch
   const isCloudBackend = currentBackendUrl.includes('railway.app') || currentBackendUrl.includes('onrender.com') || currentBackendUrl.includes('aws');
   const isLocalDB = formData.host.includes('localhost') || formData.host.includes('127.0.0.1');
   const showWarning = isCloudBackend && isLocalDB;
@@ -279,7 +275,6 @@ const ConnectionForm = ({ onConnect, isConnecting, isConnected, onDisconnect, cu
 
   return (
     <div className="space-y-4">
-      {/* Configuration Warning */}
       {showWarning && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex gap-2 items-start">
           <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
@@ -360,7 +355,6 @@ const ConnectionForm = ({ onConnect, isConnecting, isConnected, onDisconnect, cu
   );
 };
 
-// --- MAIN APP COMPONENT ---
 
 export default function SQLAssistant() {
   const [apiBaseUrl, setApiBaseUrl] = useState(API_BASE_URL);
@@ -471,7 +465,6 @@ export default function SQLAssistant() {
         const valueKey = keys.find(k => {
             if (typeof firstRow[k] !== 'number' && typeof firstRow[k] !== 'string') return false; // Basic check
             
-            // Check if parsing works
             const parsedVal = parseFloat(firstRow[k]);
             if (isNaN(parsedVal)) return false;
 
@@ -488,7 +481,6 @@ export default function SQLAssistant() {
         let shouldChart = false;
         
         if (labelKey && valueKey) {
-            // ALWAYS set to true if keys are found
             shouldChart = true;
         }
 
@@ -541,7 +533,6 @@ export default function SQLAssistant() {
   return (
     <div className="flex flex-col md:flex-row h-[90vh] mt-18 w-full bg-slate-50 text-slate-900 font-sans overflow-hidden">
       
-      {/* CONNECTION PANEL */}
       <div className={`
         w-full md:w-80 bg-white border-b md:border-b-0 md:border-r border-slate-200 flex flex-col shadow-sm z-20 flex-shrink-0 transition-all duration-300 ease-in-out
         ${isConnectionExpanded ? 'h-[60vh] md:h-full' : 'h-14 md:h-full'}
@@ -598,12 +589,10 @@ export default function SQLAssistant() {
           </div>
         </div>
         
-        {/* Connection Content */}
         <div className={`
           flex-1 overflow-y-auto p-4 md:p-5
           ${isConnectionExpanded ? 'block' : 'hidden md:block'}
         `}>
-          {/* New Connection Form with Config Pass-through */}
           <ConnectionForm 
             onConnect={handleConnect} 
             isConnecting={isConnecting}
@@ -634,7 +623,6 @@ export default function SQLAssistant() {
         </div>
       </div>
 
-      {/* MAIN CHAT AREA */}
       <div className="flex-1 flex flex-col h-full overflow-hidden relative">
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
           {messages.map((msg) => (

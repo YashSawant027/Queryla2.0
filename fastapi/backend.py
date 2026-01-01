@@ -16,12 +16,10 @@ from pymongo import MongoClient
 import datetime
 from decimal import Decimal
 
-# Load environment variables from .env file
 load_dotenv()
 
 app = FastAPI(title="Universal Text-to-SQL/NoSQL API")
 
-# Allow all origins for local testing/generic deployment
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -30,14 +28,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Global variables
 db_instance = None
 mongo_client = None
 mongo_db_name = None
 agent_executor = None
 current_dialect = "postgresql" 
 
-# Define connection examples for user reference
 CONNECTION_EXAMPLES = {
     "PostgreSQL": "postgres://user:password@localhost:5432/dbname",
     "MySQL": "mysql://user:password@localhost:3306/dbname",
@@ -56,7 +52,7 @@ class QueryRequest(BaseModel):
 
 class QueryResponse(BaseModel):
     answer: str
-    sql_query: Optional[str] = None # Stores SQL or MongoDB Pipeline JSON
+    sql_query: Optional[str] = None 
     data: Optional[List[Dict[str, Any]]] = None
     chart_config: Optional[Dict[str, Any]] = None
 
@@ -71,7 +67,6 @@ def get_mongo_schema(client, db_name):
             
         doc = db[collection_name].find_one()
         if doc:
-            # Convert ObjectId and datetime to string for prompt readability
             doc_str = str(doc)
             schema_info.append(f"Collection: '{collection_name}'\nSample Document: {doc_str}")
     return "\n\n".join(schema_info)
@@ -81,18 +76,14 @@ def extract_json_from_text(text_content: str):
     Robustly extracts JSON object from a string that might contain other text.
     """
     try:
-        # 1. Try finding a code block first
         json_match = re.search(r"```json\s*(\{.*?\})\s*```", text_content, re.DOTALL)
         if json_match:
             return json.loads(json_match.group(1))
             
-        # 2. Try finding just the JSON object structure
-        # Matches the first opening brace { and the last closing brace }
         json_match = re.search(r"(\{.*\})", text_content, re.DOTALL)
         if json_match:
             return json.loads(json_match.group(1))
             
-        # 3. Fallback: try parsing the whole string
         return json.loads(text_content.strip())
         
     except json.JSONDecodeError as e:
@@ -100,7 +91,6 @@ def extract_json_from_text(text_content: str):
         print(f"Content was: {text_content}")
         return None
 
-# Helper to handle non-serializable objects (dates, decimals) for LLM context
 def json_serial(obj):
     if isinstance(obj, (datetime.date, datetime.datetime)):
         return obj.isoformat()
@@ -118,7 +108,6 @@ def generate_chart_config_heuristic(data: List[Dict[str, Any]]) -> Optional[Dict
     first_row = data[0]
     keys = list(first_row.keys())
     
-    # 1. Identify Label Key
     label_key = None
     for k, v in first_row.items():
         if isinstance(v, (str, datetime.date, datetime.datetime)):
@@ -128,7 +117,6 @@ def generate_chart_config_heuristic(data: List[Dict[str, Any]]) -> Optional[Dict
     if not label_key and keys:
         label_key = keys[0]
 
-    # 2. Identify Value Key
     value_key = None
     for k, v in first_row.items():
         if isinstance(v, (int, float, Decimal)):
@@ -207,7 +195,6 @@ async def generate_chart_config_ai(user_question: str, data: List[Dict[str, Any]
         if not config:
             return None
             
-        # Validate keys
         first_row_keys = data[0].keys()
         if config.get("labelKey") not in first_row_keys or config.get("valueKey") not in first_row_keys:
             return None 
@@ -232,11 +219,9 @@ def get_connection_examples():
 async def connect_database(request: ConnectRequest):
     global db_instance, agent_executor, current_dialect, mongo_client, mongo_db_name
     
-    # Check for API Key
     if not os.getenv("GROQ_API_KEY"):
         raise HTTPException(status_code=500, detail="GROQ_API_KEY not found in environment variables.")
 
-    # Reset state
     db_instance = None
     mongo_client = None
     agent_executor = None
@@ -244,22 +229,18 @@ async def connect_database(request: ConnectRequest):
     try:
         connection_str = request.connection_string.strip()
         
-        # --- MONGODB HANDLER ---
         if connection_str.startswith("mongodb://") or connection_str.startswith("mongodb+srv://"):
             current_dialect = "mongodb"
             try:
                 mongo_client = MongoClient(connection_str)
-                # Quick check
                 mongo_client.admin.command('ping')
                 
-                # Extract DB name from connection string or default
                 try:
                     mongo_db_name = pymongo.uri_parser.parse_uri(connection_str)['database']
                 except:
                     mongo_db_name = None
                 
                 if not mongo_db_name:
-                    # Fallback: use the first non-admin/local db
                     dbs = mongo_client.list_database_names()
                     mongo_db_name = next((db for db in dbs if db not in ['admin', 'local', 'config']), 'test')
 
@@ -273,7 +254,6 @@ async def connect_database(request: ConnectRequest):
             except Exception as e:
                 raise HTTPException(status_code=400, detail=f"MongoDB Connection Failed: {str(e)}")
 
-        # --- SQL HANDLER ---
         if connection_str.startswith("postgres://"):
             connection_str = connection_str.replace("postgres://", "postgresql+psycopg2://", 1)
         elif connection_str.startswith("postgresql://") and "+" not in connection_str:
@@ -329,12 +309,10 @@ async def process_query(request: QueryRequest):
         raise HTTPException(status_code=400, detail="Database not connected. Please call /connect first.")
     
     try:
-        # Initialize LLM
         llm = ChatGroq(temperature=0, model_name="llama-3.1-8b-instant")
         sql_query = ""
         data = []
 
-        # --- MONGODB QUERY PATH ---
         if current_dialect == "mongodb":
             schema_context = get_mongo_schema(mongo_client, mongo_db_name)
             
@@ -414,11 +392,8 @@ async def process_query(request: QueryRequest):
                 else:
                     data = [{"status": "Query executed successfully, no rows returned"}]
 
-        # --- GENERATE SMART CHART CONFIG ---
-        # 1. Try AI First
         chart_config = await generate_chart_config_ai(request.text, data)
         
-        # 2. Fallback to Heuristic if AI returned None
         if not chart_config:
             chart_config = generate_chart_config_heuristic(data)
 
@@ -435,6 +410,5 @@ async def process_query(request: QueryRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    # Use the PORT environment variable provided by Railway, or default to 8080
     port = int(os.environ.get("PORT", 8080))
     uvicorn.run(app, host="0.0.0.0", port=port)
