@@ -20,7 +20,7 @@ function Review() {
         </h2>
         <p className="text-center mt-5 text-gray-600 text-base md:text-lg">
           Discover what industry leaders and professionals say about{" "}
-          <span className="font-semibold text-indigo-700">DataQuery AI</span>:
+          <span className="font-semibold text-indigo-700">Queryla</span>:
         </p>
         <div className="md:mt-20 mt-5 grid md:grid-flow-col grid-rows-7 gap-4">
           <div className="row-span-3 white shadow-xl p-5 rounded-[10px] flex justify-center items-center">
