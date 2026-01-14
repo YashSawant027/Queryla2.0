@@ -552,13 +552,13 @@ export default function SQLAssistant() {
           
           <div className="flex items-center gap-2">
              <div className="relative">
-                <button 
+                {/* <button 
                   onClick={(e) => { e.stopPropagation(); setShowSettings(!showSettings); }}
                   className="p-1 text-slate-400 hover:text-indigo-600 transition-colors"
                   title="Server Settings"
                 >
                   <Settings className="w-5 h-5" />
-                </button>
+                </button> */}
                 {showSettings && (
                   <div className="absolute top-8 right-0 w-48 bg-white border border-slate-200 rounded-lg shadow-lg p-2 z-50">
                     <p className="text-[10px] text-slate-400 font-bold mb-2 px-2 uppercase">Backend Server</p>
