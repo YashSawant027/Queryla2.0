@@ -26,7 +26,7 @@ import {
   Globe
 } from 'lucide-react';
 
-const API_BASE_URL = "https://queryla20-production-7245.up.railway.app"; 
+const API_BASE_URL = "https://queryla2-0.onrender.com"; 
 
 
 const SimpleLineChart = ({ data, labelKey, valueKey, color = "#8884d8" }) => {
