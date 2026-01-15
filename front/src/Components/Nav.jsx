@@ -1,12 +1,18 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "./Authprovider";
 
 function Nav() {
   const [isOpen, setIsOpen] = useState(false);
   const { islogin, setislogin } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Close menu on route change (mobile UX fix)
+  useEffect(() => {
+    setIsOpen(false);
+  }, [location.pathname]);
 
   const handlelogout = () => {
     localStorage.removeItem("accessToken");
@@ -16,20 +22,30 @@ function Nav() {
   };
 
   return (
-    <nav className="w-full mx-auto border-b border-gray-300 fixed top-0 left-0 bg-white shadow-sm z-50 ">
-      <div className="w-full max-w-[1370px] mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center h-[9vh]">
-        <h1 className="text-black font-bold text-[20px] md:text-[24px]">Queryla</h1>
+    <nav className="w-full fixed top-0 left-0 bg-white border-b border-gray-300 shadow-sm z-50">
+      <div className="max-w-[1370px] mx-auto h-[9vh] px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+        
+        {/* Logo */}
+        <h1 className="text-black font-bold text-[20px] md:text-[24px]">
+          Queryla
+        </h1>
 
-        <ul className="hidden md:flex gap-6  text-[16px] text-gray-700 font-medium">
-          <li className="hover:text-black cursor-pointer"><Link to="/">Home</Link></li>
-          <li className="hover:text-black cursor-pointer"><Link to="/contact">Contact</Link></li>
+        {/* Desktop Links */}
+        <ul className="hidden md:flex gap-6 text-[16px] text-gray-700 font-medium">
+          <li>
+            <Link to="/" className="hover:text-black">Home</Link>
+          </li>
+          <li>
+            <Link to="/contact" className="hover:text-black">Contact</Link>
+          </li>
         </ul>
 
-        <div className="flex gap-4">
+        {/* Desktop Auth Buttons */}
+        <div className="hidden md:flex gap-4">
           {islogin ? (
             <button
-              className="hidden md:block cursor-pointer text-white text-[15px] rounded-[7px] px-4 py-2 hover:bg-gray-800 bg-black transition"
               onClick={handlelogout}
+              className="bg-black text-white text-[15px] rounded-[7px] px-4 py-2 hover:bg-gray-800 transition"
             >
               Logout
             </button>
@@ -37,13 +53,13 @@ function Nav() {
             <>
               <Link
                 to="/login"
-                className="hidden md:block cursor-pointer border-1 text-black text-[15px] rounded-[7px] px-4 py-2 hover:bg-gray-100 transition"
+                className="border text-black text-[15px] rounded-[7px] px-4 py-2 hover:bg-gray-100 transition"
               >
                 Login
               </Link>
               <Link
                 to="/register"
-                className="hidden md:block cursor-pointer bg-black text-white text-[15px] rounded-[7px] px-4 py-2 hover:bg-gray-800 transition"
+                className="bg-black text-white text-[15px] rounded-[7px] px-4 py-2 hover:bg-gray-800 transition"
               >
                 Register
               </Link>
@@ -51,27 +67,37 @@ function Nav() {
           )}
         </div>
 
+        {/* Mobile Toggle Button */}
         <button
-          className="md:hidden flex items-center text-black"
+          className="md:hidden text-black"
           onClick={() => setIsOpen(!isOpen)}
         >
-          {isOpen ? <X size={20} /> : <Menu size={20} />}
+          {isOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
       </div>
 
+      {/* Mobile Menu */}
       {isOpen && (
-        <div className="md:hidden px-6 pb-4 flex flex-col gap-3 bg-white pt-4 border-t border-gray-200">
-          <Link to="/" className="text-gray-800 text-[14px] text-center hover:text-black transition">
+        <div className="md:hidden bg-white border-t border-gray-200 px-6 py-4 flex flex-col gap-3">
+          
+          <Link
+            to="/"
+            className="text-center text-gray-800 hover:text-black"
+          >
             Home
           </Link>
-          <Link to="/contact" className="text-gray-800 text-[14px] text-center hover:text-black transition">
+
+          <Link
+            to="/contact"
+            className="text-center text-gray-800 hover:text-black"
+          >
             Contact
           </Link>
 
           {islogin ? (
             <button
               onClick={handlelogout}
-              className="bg-black text-white text-center cursor-pointer text-[15px] rounded-[7px] px-4 py-2 mt-2 hover:bg-gray-800 transition"
+              className="bg-black text-white rounded-[7px] px-4 py-2 mt-2 hover:bg-gray-800 transition"
             >
               Logout
             </button>
@@ -79,13 +105,14 @@ function Nav() {
             <>
               <Link
                 to="/login"
-                className="bg-black text-white text-center cursor-pointer text-[15px] rounded-[7px] px-4 py-2 mt-2 hover:bg-gray-800 transition"
+                className="bg-black text-white text-center rounded-[7px] px-4 py-2 mt-2 hover:bg-gray-800 transition"
               >
                 Login
               </Link>
+
               <Link
                 to="/register"
-                className="bg-black text-white text-center cursor-pointer text-[15px] rounded-[7px] px-4 py-2 mt-2 hover:bg-gray-800 transition"
+                className="bg-black text-white text-center rounded-[7px] px-4 py-2 mt-2 hover:bg-gray-800 transition"
               >
                 Register
               </Link>
