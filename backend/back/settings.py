@@ -138,7 +138,4 @@ REST_FRAMEWORK = {
     )
 }
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "https://yashsawant027.github.io",
-]
+CORS_ALLOW_ALL_ORIGINS = True
