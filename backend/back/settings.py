@@ -141,4 +141,5 @@ REST_FRAMEWORK = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "https://yashsawant027.github.io",
+    "https://nutriscan-one-027.vercel.app"
 ]
