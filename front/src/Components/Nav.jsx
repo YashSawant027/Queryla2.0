@@ -26,9 +26,14 @@ function Nav() {
       <div className="max-w-[1370px] mx-auto h-[9vh] px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         
         {/* Logo */}
-        <h1 className="text-black font-bold text-[20px] md:text-[24px]">
-          Queryla
-        </h1>
+        <Link to="/" className="flex items-center gap-2 group">
+          <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center group-hover:rotate-12 transition-transform">
+            <span className="text-white font-black text-xl">Q</span>
+          </div>
+          <h1 className="text-black font-black text-[22px] tracking-tighter">
+            Queryla
+          </h1>
+        </Link>
 
         {/* Desktop Links */}
         <ul className="hidden md:flex gap-6 text-[16px] text-gray-700 font-medium">
