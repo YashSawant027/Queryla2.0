@@ -143,3 +143,20 @@ CORS_ALLOWED_ORIGINS = [
     "https://yashsawant027.github.io",
     "https://nutriscan-one-027.vercel.app"
 ]
+
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "authorization",
+    "content-type",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
+
+CORS_ALLOW_ALL_METHODS = True
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://nutriscan-one-027.vercel.app"
+]
