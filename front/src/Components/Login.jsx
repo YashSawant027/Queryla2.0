@@ -1,83 +1,156 @@
-import React, { useContext, useState } from 'react'
-import Nav from './Nav'
-import axios from 'axios'
-import {useNavigate} from 'react-router-dom'
-import  { AuthContext } from './Authprovider'
-import { Link } from 'react-router-dom'
+import React, { useContext, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import Nav from './Nav';
+import axios from 'axios';
+import { useNavigate, Link } from 'react-router-dom';
+import { AuthContext } from './Authprovider';
+import { Lock, User, Loader2, AlertCircle } from 'lucide-react';
+
 function Login() {
+  const [username, setusername] = useState('');
+  const [password, setpassword] = useState('');
+  const [error, seterror] = useState({});
+  const [loading, setloading] = useState(false);
+  const { setislogin } = useContext(AuthContext);
+  const navigate = useNavigate();
 
-    const [username, setusername] = useState()
-    const [password, setpassword] = useState()
-    const [error, seterror] = useState({})
-    const [loading, setloading] = useState()
-    const {islogin, setislogin} = useContext(AuthContext)
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    const userdata = { username, password };
 
-    const navigate = useNavigate()
-
-    const handleLogin = async (e) => {
-        e.preventDefault()
-
-        const userdata = {
-        'username': username,
-        'password': password
+    try {
+      setloading(true);
+      const response = await axios.post('https://queryla2-0-1.onrender.com/api/v1/LoginPage', userdata);
+      localStorage.setItem('accessToken', response.data.access);
+      localStorage.setItem('refreshToken', response.data.refresh);
+      setislogin(true);
+      seterror({});
+      navigate('/');
+    } catch (error) {
+      seterror(error.response?.data || { general: "Invalid credentials. Please try again." });
+    } finally {
+      setloading(false);
     }
-
-        try{
-            setloading(true)
-            const response = await axios.post('https://queryla2-0-1.onrender.com/api/v1/LoginPage', userdata)
-            localStorage.setItem('accessToken', response.data.access)
-            localStorage.setItem('refreshToken', response.data.refresh)
-            console.log("Login successfull")
-            setislogin(true)
-            navigate('/')
-            seterror({})
-        }
-        catch(error){
-            seterror(error.response.data)
-            console.log("Login error=>",error.response.data)
-        }
-        finally{
-            setloading(false)
-        }
-    
-    }
-    
+  };
 
   return (
-    <>
-        <Nav/>
-    
-    <div className='w-full h-screen flex justify-center items-center'>
-        
-        <div className='w-sm p-5 rounded-[10px] shadow-2xl -100'>
-            <h1 className='text-center font-bold text-[35px]'>Login</h1>
-            <p className='text-center'>Enter your credentials below</p>
-            <div className='mt-4'>
-                <form onSubmit={handleLogin}>
-                    
-                        <div>
-                            <label className='block'>Name</label>
-                            <input type="text" id='name' onChange={(e)=>setusername(e.target.value)}  className='border-1 mt-2  border-gray-300 rounded-[7px] w-full h-[40px] px-2' placeholder='alex'/>
-                            {error.username && (<p className="text-red-600 text-sm">{error.username}</p>)}
-                        </div>
-                    
-                    
-                        <div className='mt-3 mb-4'>
-                            <label className='block'>Password  </label>
-                            <input type="password" id='password' onChange={(e)=>setpassword(e.target.value)}  className='border-1 mt-2 border-gray-300 rounded-[7px] w-full h-[40px] px-2'/>
-                            {error.Password && (<p className="text-red-600 text-sm">{error.Password}</p>)}
-                        </div>
-                    
-                        <div className='flex justify-center items-center'>
-                            {loading ? (<button className='bg-black block mx-auto w-full text-white px-3 py-2 rounded-[5px] hover:bg-gray-900 cursor-pointer'>Please wait ...</button>) : (<button className='bg-black block mx-auto w-full text-white px-3 py-2 rounded-[5px] hover:bg-gray-900 cursor-pointer'>Login</button>)}
-                            
-                        </div>
-                        <p className='mt-3 text-center'>Don't have a account ? <u><Link to='/register' className='text-blue-800'>Register</Link></u></p>
-                </form>
+    <div className="bg-[#fcfcfd] min-h-screen flex flex-col font-sans selection:bg-indigo-100 selection:text-indigo-900 overflow-hidden relative">
+      <Nav />
+      
+      {/* Decorative Background Blur */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-50/50 rounded-full blur-[120px] -z-0 pointer-events-none" />
+
+      {/* Main Container: Centered using Flex-Grow */}
+      <main className="flex-grow flex items-center justify-center px-6 relative z-10">
+        <motion.div 
+          initial={{ opacity: 0, y: 20, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="w-full max-w-md bg-white border border-slate-100 rounded-[2.5rem] p-8 md:p-12 shadow-[0_30px_70px_rgba(0,0,0,0.06)]"
+        >
+          {/* Header */}
+          <div className="text-center mb-10">
+            <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-3">Welcome Back</h1>
+            <p className="text-slate-500 font-medium">Enter your credentials to access Queryla.</p>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-6">
+            {/* Username Input */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Username</label>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors">
+                  <User size={18} />
+                </div>
+                <input 
+                  autoFocus
+                  type="text" 
+                  onChange={(e) => setusername(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 outline-none focus:bg-white focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all text-slate-900 placeholder:text-slate-300 font-medium"
+                  placeholder="alex_doe"
+                  required
+                />
+              </div>
+              <AnimatePresence>
+                {error.username && (
+                  <motion.p 
+                    initial={{ opacity: 0, height: 0 }} 
+                    animate={{ opacity: 1, height: 'auto' }} 
+                    exit={{ opacity: 0, height: 0 }}
+                    className="flex items-center gap-1 text-rose-500 text-xs font-semibold mt-1 ml-1"
+                  >
+                    <AlertCircle size={12} /> {error.username}
+                  </motion.p>
+                )}
+              </AnimatePresence>
             </div>
-        </div>
-    </div></>
-  )
+
+            {/* Password Input */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Password</label>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors">
+                  <Lock size={18} />
+                </div>
+                <input 
+                  type="password" 
+                  onChange={(e) => setpassword(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 outline-none focus:bg-white focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all text-slate-900 placeholder:text-slate-300 font-medium"
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+              <AnimatePresence>
+                {error.Password && (
+                  <motion.p 
+                    initial={{ opacity: 0, height: 0 }} 
+                    animate={{ opacity: 1, height: 'auto' }} 
+                    exit={{ opacity: 0, height: 0 }}
+                    className="flex items-center gap-1 text-rose-500 text-xs font-semibold mt-1 ml-1"
+                  >
+                    <AlertCircle size={12} /> {error.Password}
+                  </motion.p>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Login Button */}
+            <motion.button
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              disabled={loading}
+              className="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl shadow-xl shadow-slate-200 hover:bg-indigo-600 transition-all flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <Loader2 size={20} className="animate-spin" />
+              ) : "Sign In"}
+            </motion.button>
+
+            {/* Error Message */}
+            <AnimatePresence>
+              {error.general && (
+                <motion.p 
+                  initial={{ opacity: 0 }} 
+                  animate={{ opacity: 1 }} 
+                  className="text-rose-500 text-xs font-bold text-center mt-2 p-2 bg-rose-50 rounded-lg border border-rose-100"
+                >
+                  {error.general}
+                </motion.p>
+              )}
+            </AnimatePresence>
+
+            {/* Footer */}
+            <div className="pt-4 border-t border-slate-50 mt-4">
+              <p className="text-center text-slate-400 font-medium">
+                Don't have an account? {' '}
+                <Link to="/register" className="text-indigo-600 font-bold hover:underline transition-all">Register</Link>
+              </p>
+            </div>
+          </form>
+        </motion.div>
+      </main>
+    </div>
+  );
 }
 
-export default Login
+export default Login;

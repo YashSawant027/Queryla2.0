@@ -38,10 +38,10 @@ function Nav() {
         {/* Desktop Links */}
         <ul className="hidden md:flex gap-6 text-[16px] text-gray-700 font-medium">
           <li>
-            <Link to="/" className="hover:text-black">Home</Link>
+            <Link to="/" className="hover:text-indigo-600 hover:font-bold">Home</Link>
           </li>
           <li>
-            <Link to="/contact" className="hover:text-black">Contact</Link>
+            <Link to="/contact" className="hover:text-indigo-600 hover:font-bold">Contact</Link>
           </li>
         </ul>
 
