@@ -43,7 +43,7 @@ function Practicals() {
   return (
     <>
       <Nav />
-      <ParticlesBackground
+      {/* <ParticlesBackground
         colors={['#00ffff', '#ff00ff', '#ffaa00']}
         size={4}
         countDesktop={80}
@@ -51,7 +51,7 @@ function Practicals() {
         countMobile={40}
         zIndex={-100}
         height="100vh"
-      />
+      /> */}
       
       <div className='min-h-screen w-full m-auto flex justify-center items-center md:px-0 px-5'>
         {/* Hero Section */}
