@@ -48,7 +48,7 @@ const Practicals = () => {
           >
             <Sparkles size={14} className="text-indigo-600 animate-pulse" />
             <span className="text-[12px] font-bold text-indigo-700 tracking-wider uppercase">
-              The smartest way to talk to your data
+              Talk to your data
             </span>
           </motion.div>
           
