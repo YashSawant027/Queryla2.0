@@ -15,7 +15,7 @@ import Contact from './Components/Contact'
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Home } from 'lucide-react'
 import AuthProvider from './Components/Authprovider'
-
+import FullAutomationGuide from './Components/FullAutomationGuide'
 
 function App() {
 
@@ -29,6 +29,7 @@ function App() {
             <Route path='/login' element={<Login />} />
             <Route path='/register' element={<Register />} />
             <Route path='/contact' element={<Contact />} />
+            <Route path='/FullAutomationGuide' element={<FullAutomationGuide/>} />
             <Route path='/data' element={<Database/>}/>
           </Routes>
         </BrowserRouter>

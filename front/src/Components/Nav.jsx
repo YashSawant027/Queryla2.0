@@ -41,8 +41,12 @@ function Nav() {
             <Link to="/" className="hover:text-indigo-600 hover:font-bold">Home</Link>
           </li>
           <li>
+            <Link to="/FullAutomationGuide" className="hover:text-indigo-600 hover:font-bold">Guide</Link>
+          </li>
+          <li>
             <Link to="/contact" className="hover:text-indigo-600 hover:font-bold">Contact</Link>
           </li>
+          
         </ul>
 
         {/* Desktop Auth Buttons */}

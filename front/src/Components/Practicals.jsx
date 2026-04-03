@@ -17,6 +17,7 @@ import TutorialPage from './Tutorial';
 import Faqitems from './Faqitems';
 import Review from './Review';
 import Footer from './Footer';
+import FullAutomationGuide from './FullAutomationGuide';
 
 const Practicals = () => {
   const { islogin } = useContext(AuthContext);
@@ -89,7 +90,6 @@ const Practicals = () => {
           </motion.div>
         </div>
       </section>
-
       {/* --- CONTENT WRAPPER --- */}
       <div className="bg-white relative z-10">
         

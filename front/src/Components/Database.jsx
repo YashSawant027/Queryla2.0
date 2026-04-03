@@ -23,11 +23,15 @@ import {
   Cloud,
   Eye,
   EyeOff,
-  Globe
+  Globe,
+  Download,
+  FileText,
+  Image as ImageIcon,
+  Archive,
+  Loader2
 } from 'lucide-react';
 
 const API_BASE_URL = "https://queryla2-0.onrender.com"; 
-
 
 const SimpleLineChart = ({ data, labelKey, valueKey, color = "#8884d8" }) => {
   if (!data || data.length === 0) return <div className="text-gray-400 p-4">No data to chart</div>;
@@ -164,7 +168,78 @@ const DataTable = ({ data }) => {
 const ChartContainer = ({ data, config }) => {
   const defaultType = config.type === 'bar' ? 'pie' : (config.type || 'pie');
   const [chartType, setChartType] = useState(defaultType);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const chartRef = useRef(null);
+
   const activeType = (chartType === 'bar' || chartType === 'area') ? 'pie' : chartType; 
+
+  const handleDownloadCSV = () => {
+    setIsMenuOpen(false);
+    if (!data || data.length === 0) return;
+    const headers = Object.keys(data[0]);
+    const csvRows = data.map(row =>
+      headers.map(fieldName => {
+        let val = row[fieldName];
+        if (typeof val === 'object') val = JSON.stringify(val);
+        return `"${String(val).replace(/"/g, '""')}"`;
+      }).join(',')
+    );
+    const csvString = [headers.join(','), ...csvRows].join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'query_data.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleDownloadImage = async () => {
+    setIsMenuOpen(false);
+    if (!chartRef.current) return;
+    
+    setIsDownloading(true);
+    try {
+      // Switched to html-to-image for better SVG support and fewer tainted canvas issues
+      if (!window.htmlToImage) {
+          await new Promise((resolve, reject) => {
+              const script = document.createElement('script');
+              script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js';
+              script.crossOrigin = "anonymous";
+              script.onload = resolve;
+              script.onerror = () => reject(new Error("Failed to load html-to-image script"));
+              document.head.appendChild(script);
+          });
+      }
+      
+      // Delay to ensure the dropdown menu is fully closed and out of the screenshot
+      await new Promise(res => setTimeout(res, 300));
+      
+      const dataUrl = await window.htmlToImage.toPng(chartRef.current, {
+          backgroundColor: "#ffffff",
+          pixelRatio: 2, 
+          style: { overflow: 'hidden' }
+      });
+      
+      const link = document.createElement('a');
+      link.download = 'chart_visualization.png';
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error("Failed to generate image:", err);
+      alert("Failed to download chart image. Your browser or ad-blocker might be blocking the image generation library.");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const handleDownloadBoth = async () => {
+    setIsMenuOpen(false);
+    handleDownloadCSV();
+    await handleDownloadImage();
+  };
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden animate-in slide-in-from-bottom-2 duration-500">
@@ -176,18 +251,51 @@ const ChartContainer = ({ data, config }) => {
           Visual Insight
         </div>
         <div className="flex gap-1 bg-slate-100 p-1 rounded-lg">
-          <button onClick={() => setChartType('line')} className={`p-1.5 rounded-md transition-all ${activeType === 'line' ? 'bg-white shadow text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`} title="Line Chart">
+          {/* Download Dropdown */}
+          <div className="relative">
+            <button 
+              onClick={() => setIsMenuOpen(!isMenuOpen)} 
+              disabled={isDownloading}
+              className={`p-1.5 rounded-md transition-all ${isMenuOpen ? 'bg-white shadow text-indigo-600' : 'text-slate-400 hover:text-slate-600 hover:bg-white'} disabled:opacity-50`} 
+              title="Download Options"
+            >
+              {isDownloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+            </button>
+            
+            {isMenuOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setIsMenuOpen(false)}></div>
+                <div className="absolute right-0 top-full mt-1 w-40 bg-white border border-slate-200 rounded-lg shadow-lg py-1 z-50">
+                  <button onClick={handleDownloadCSV} className="w-full text-left px-3 py-2 text-[11px] text-slate-600 hover:bg-slate-50 flex items-center gap-2">
+                    <FileText className="w-3 h-3 text-slate-400" /> Data (CSV)
+                  </button>
+                  <button onClick={handleDownloadImage} className="w-full text-left px-3 py-2 text-[11px] text-slate-600 hover:bg-slate-50 flex items-center gap-2">
+                    <ImageIcon className="w-3 h-3 text-slate-400" /> Chart (PNG)
+                  </button>
+                  <div className="h-[1px] bg-slate-100 my-1"></div>
+                  <button onClick={handleDownloadBoth} className="w-full text-left px-3 py-2 text-[11px] text-slate-600 hover:bg-slate-50 flex items-center gap-2 font-medium">
+                    <Archive className="w-3 h-3 text-slate-400" /> Download Both
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+          
+          <button onClick={() => { setChartType('line'); setIsMenuOpen(false); }} className={`p-1.5 rounded-md transition-all ${activeType === 'line' ? 'bg-white shadow text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`} title="Line Chart">
             <LineChart className="w-3.5 h-3.5" />
           </button>
-          <button onClick={() => setChartType('pie')} className={`p-1.5 rounded-md transition-all ${activeType === 'pie' ? 'bg-white shadow text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`} title="Pie Chart">
+          <button onClick={() => { setChartType('pie'); setIsMenuOpen(false); }} className={`p-1.5 rounded-md transition-all ${activeType === 'pie' ? 'bg-white shadow text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`} title="Pie Chart">
             <PieChartIcon className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
-      <div className="p-4 border-b border-slate-100">
+      
+      {/* Target for Image Snapshot */}
+      <div ref={chartRef} className="p-4 border-b border-slate-100 bg-white relative">
         {activeType === 'line' && <SimpleLineChart data={data} labelKey={config.labelKey} valueKey={config.valueKey} color="#8884d8" />}
         {activeType === 'pie' && <SimplePieChart data={data} labelKey={config.labelKey} valueKey={config.valueKey} />}
       </div>
+      
       <div className="p-4 max-h-60 overflow-y-auto">
         <h4 className="text-xs font-bold text-slate-500 uppercase mb-2">Source Data</h4>
         <DataTable data={data} />
@@ -463,7 +571,7 @@ export default function SQLAssistant() {
         }) || keys[0];
 
         const valueKey = keys.find(k => {
-            if (typeof firstRow[k] !== 'number' && typeof firstRow[k] !== 'string') return false; // Basic check
+            if (typeof firstRow[k] !== 'number' && typeof firstRow[k] !== 'string') return false; 
             
             const parsedVal = parseFloat(firstRow[k]);
             if (isNaN(parsedVal)) return false;
